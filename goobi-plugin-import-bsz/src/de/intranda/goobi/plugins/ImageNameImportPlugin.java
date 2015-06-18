@@ -44,8 +44,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
     private static final Logger logger = Logger.getLogger(ImageNameImportPlugin.class);
 
     private static final String PLUGIN_NAME = "ImageNameImportPlugin";
-   
-    
+
     private Prefs prefs;
     private String importFolder = "";
     private String data = "";
@@ -54,10 +53,11 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
     private static MetadataType CATALOGIDSOURCE_TYPE;
     private static MetadataType SHELFMARK_TYPE;
 
+    private String ppnDigital;
+    
     // TODO anpasen
-    private static final String IMAGE_FOLDER_EXTENSION = "_media";
-    private static final File ROOT_FOLDER = new File("/home/robert/Downloads/bsz/");
-
+    private static final String IMAGE_FOLDER_EXTENSION = "_tif";
+    private static final File ROOT_FOLDER = new File("/opt/digiverso/BSZ/HTWG Konstanz/");
 
     private static final String REGEX =
             "\\w{9}\\-S\\d{4}\\-(volume|text|image|cover_front|cover_back|title_page|contents|preface|index|additional)\\-\\w\\d{4}.tif";
@@ -86,9 +86,8 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
                     } else if (filename.equals("Thumbs.db")) {
                         //                        logger.debug("Thumbs.db will be ignored");
-                    }
-
-                    else {
+                    } else if (filename.endsWith(".txt")) {
+                    } else {
                         if (!filename.matches(REGEX)) {
                             answer.add(filename + " does not match naming conventions.");
                             //                        } else {
@@ -139,8 +138,9 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             if (myRdf != null) {
                 try {
                     ats =
-                            myImportOpac.createAtstsl(myRdf.getDigitalDocument().getLogicalDocStruct().getAllMetadataByType(
-                                    prefs.getMetadataTypeByName("TitleDocMain")).get(0).getValue(), null).toLowerCase();
+                            myImportOpac.createAtstsl(
+                                    myRdf.getDigitalDocument().getLogicalDocStruct()
+                                            .getAllMetadataByType(prefs.getMetadataTypeByName("TitleDocMain")).get(0).getValue(), null).toLowerCase();
 
                 } catch (Exception e) {
                     ats = "";
@@ -174,8 +174,22 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             if (!identifierSourceList.isEmpty()) {
                 try {
                     // TODO change this later
+
+                    String identifierSourceValue = identifierSourceList.get(0).getValue();
                     Metadata identifierDigital = new Metadata(CATALOGIDDIGITAL_TYPE);
-                    identifierDigital.setValue(identifierSourceList.get(0).getValue());
+
+                    if (identifierSourceValue.equals("011770007")) {
+                        identifierDigital.setValue("bsz430939787");
+                    } else if (identifierSourceValue.equals("049472445")) {
+                        identifierDigital.setValue("bsz43133286X");
+                    } else if (identifierSourceValue.equals("035072075")) {
+                        identifierDigital.setValue("bsz431333815");
+                    } else if (identifierSourceValue.equals("052645894")) {
+                        identifierDigital.setValue("bsz43215101X");
+                    } else if (identifierSourceValue.equals("051225395")) {
+                        identifierDigital.setValue("bsz432167501");
+                    }
+                    ppnDigital = identifierDigital.getValue();
                     ds.addMetadata(identifierDigital);
                 } catch (MetadataTypeNotAllowedException e) {
                     logger.error(e);
@@ -200,7 +214,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
     @Override
     public String getProcessTitle() {
-        return ats + "_" + data;
+        return ats + "_" + ppnDigital;
     }
 
     @Override
@@ -214,8 +228,12 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             ImportObject io = new ImportObject();
             data = record.getId();
             String folder = ROOT_FOLDER.getAbsolutePath() + File.separator + data;
-            if (!validate(folder).isEmpty()) {
+            List<String> validatedData = validate(folder);
+            if (!validatedData.isEmpty()) {
                 logger.error(folder + " is not valid");
+                for (String value : validatedData) {
+                    logger.error(value);
+                }
             } else {
                 try {
                     Fileformat fileformat = convertData();
