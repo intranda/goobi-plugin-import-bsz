@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.log4j.Logger;
+import org.goobi.production.cli.helper.StringPair;
 import org.goobi.production.enums.ImportReturnValue;
 import org.goobi.production.enums.ImportType;
 import org.goobi.production.enums.PluginType;
@@ -33,6 +34,7 @@ import ugh.exceptions.PreferencesException;
 import ugh.exceptions.TypeNotAllowedForParentException;
 import ugh.exceptions.WriteException;
 import ugh.fileformats.mets.MetsMods;
+import de.sub.goobi.forms.MassImportForm;
 import de.sub.goobi.helper.exceptions.ImportPluginException;
 import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
@@ -47,20 +49,23 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
     private Prefs prefs;
     private String importFolder = "";
-    private String data = "";
+    private String ppnAnalog = "";
+    private String ppnDigital = "";
     private String ats = "";
     private static MetadataType CATALOGIDDIGITAL_TYPE;
     private static MetadataType CATALOGIDSOURCE_TYPE;
     private static MetadataType SHELFMARK_TYPE;
+    private static MetadataType COLLECTION_TYPE;
+    private MassImportForm form;
 
-    private String ppnDigital;
-    
     // TODO anpasen
     private static final String IMAGE_FOLDER_EXTENSION = "_tif";
-    private static final File ROOT_FOLDER = new File("/opt/digiverso/BSZ/HTWG Konstanz/");
+    private static final File ROOT_FOLDER = new File("/opt/digiverso/BSZ/");
 
     private static final String REGEX =
             "\\w{9}\\-S\\d{4}\\-(volume|text|image|cover_front|cover_back|title_page|contents|preface|index|additional)\\-\\w\\d{4}.tif";
+
+    private List<StringPair> identifierList = new ArrayList<>(80);
 
     private static List<String> validate(String folderPath) {
         List<String> answer = new ArrayList<String>();
@@ -121,11 +126,12 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
         CATALOGIDDIGITAL_TYPE = prefs.getMetadataTypeByName("CatalogIDDigital");
         CATALOGIDSOURCE_TYPE = prefs.getMetadataTypeByName("CatalogIDSource");
         SHELFMARK_TYPE = prefs.getMetadataTypeByName("shelfmarksource");
+        COLLECTION_TYPE = prefs.getMetadataTypeByName("singleDigCollection");
     }
 
     @Override
     public void setData(Record r) {
-        this.data = r.getData();
+        this.ppnAnalog = r.getData();
 
     }
 
@@ -134,7 +140,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
         try {
             ConfigOpacCatalogue coc = new ConfigOpac().getCatalogueByName("SWB");
             IOpacPlugin myImportOpac = (IOpacPlugin) PluginLoader.getPluginByTitle(PluginType.Opac, coc.getOpacType());
-            Fileformat myRdf = myImportOpac.search("12", data, coc, prefs);
+            Fileformat myRdf = myImportOpac.search("12", ppnDigital, coc, prefs);
             if (myRdf != null) {
                 try {
                     ats =
@@ -168,34 +174,50 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
         List<? extends Metadata> identifierDigitalList = ds.getAllMetadataByType(CATALOGIDDIGITAL_TYPE);
         List<? extends Metadata> identifierSourceList = ds.getAllMetadataByType(CATALOGIDSOURCE_TYPE);
 
-        // PPN digital is missing
-        if (identifierDigitalList.isEmpty()) {
-            // check for PPN analog 
-            if (!identifierSourceList.isEmpty()) {
-                try {
-                    // TODO change this later
+        // add analog, add prefix bsz
 
-                    String identifierSourceValue = identifierSourceList.get(0).getValue();
-                    Metadata identifierDigital = new Metadata(CATALOGIDDIGITAL_TYPE);
-
-                    if (identifierSourceValue.equals("011770007")) {
-                        identifierDigital.setValue("bsz430939787");
-                    } else if (identifierSourceValue.equals("049472445")) {
-                        identifierDigital.setValue("bsz43133286X");
-                    } else if (identifierSourceValue.equals("035072075")) {
-                        identifierDigital.setValue("bsz431333815");
-                    } else if (identifierSourceValue.equals("052645894")) {
-                        identifierDigital.setValue("bsz43215101X");
-                    } else if (identifierSourceValue.equals("051225395")) {
-                        identifierDigital.setValue("bsz432167501");
-                    }
-                    ppnDigital = identifierDigital.getValue();
-                    ds.addMetadata(identifierDigital);
-                } catch (MetadataTypeNotAllowedException e) {
-                    logger.error(e);
-                }
+        if (identifierSourceList.isEmpty()) {
+             try {
+                Metadata md = new Metadata(CATALOGIDSOURCE_TYPE);
+                md.setValue("bsz" + ppnAnalog);
+                ds.addMetadata(md);
+            } catch (MetadataTypeNotAllowedException e) {
+                logger.error(e);
             }
         }
+
+        for (Metadata md : identifierDigitalList) {
+            // add prefix bsz
+            md.setValue("bsz" + md.getValue());
+        }
+
+        //        // PPN digital is missing
+        //        if (identifierDigitalList.isEmpty()) {
+        //            // check for PPN analog 
+        //            if (!identifierSourceList.isEmpty()) {
+        //                try {
+        //
+        //                    String identifierSourceValue = identifierSourceList.get(0).getValue();
+        //                    Metadata identifierDigital = new Metadata(CATALOGIDDIGITAL_TYPE);
+        //
+        //                    if (identifierSourceValue.equals("011770007")) {
+        //                        identifierDigital.setValue("bsz430939787");
+        //                    } else if (identifierSourceValue.equals("049472445")) {
+        //                        identifierDigital.setValue("bsz43133286X");
+        //                    } else if (identifierSourceValue.equals("035072075")) {
+        //                        identifierDigital.setValue("bsz431333815");
+        //                    } else if (identifierSourceValue.equals("052645894")) {
+        //                        identifierDigital.setValue("bsz43215101X");
+        //                    } else if (identifierSourceValue.equals("051225395")) {
+        //                        identifierDigital.setValue("bsz432167501");
+        //                    }
+        //                    ppnDigital = identifierDigital.getValue();
+        //                    ds.addMetadata(identifierDigital);
+        //                } catch (MetadataTypeNotAllowedException e) {
+        //                    logger.error(e);
+        //                }
+        //            }
+        //        }
 
         // alle Signaturen entfernen
         List<? extends Metadata> shelfmarkList = ds.getAllMetadataByType(SHELFMARK_TYPE);
@@ -205,6 +227,14 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             }
         }
 
+        try {
+            Metadata col;
+            col = new Metadata(COLLECTION_TYPE);
+            col.setValue("Universität Konstanz");
+            ds.addMetadata(col);
+        } catch (MetadataTypeNotAllowedException e) {
+            logger.error(e);
+        }
     }
 
     @Override
@@ -219,15 +249,22 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
     @Override
     public List<ImportObject> generateFiles(List<Record> records) {
+        generateIdentifierList();
+
         // 1. Validierung
         // 2. convert
         // 3. Bilder kopieren
 
         List<ImportObject> answer = new ArrayList<ImportObject>();
         for (Record record : records) {
+            form.addProcessToProgressBar();
             ImportObject io = new ImportObject();
-            data = record.getId();
-            String folder = ROOT_FOLDER.getAbsolutePath() + File.separator + data;
+            ppnAnalog = record.getId();
+            ppnDigital = getDigitalPPN();
+            if (ppnDigital.isEmpty()) {
+                continue;
+            }
+            String folder = ROOT_FOLDER.getAbsolutePath() + File.separator + ppnAnalog;
             List<String> validatedData = validate(folder);
             if (!validatedData.isEmpty()) {
                 logger.error(folder + " is not valid");
@@ -247,7 +284,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
                             DocStruct physical = dd.createDocStruct(docstructBoundBook);
 
                             Metadata pathimagefiles = new Metadata(prefs.getMetadataTypeByName("pathimagefiles"));
-                            pathimagefiles.setValue(data);
+                            pathimagefiles.setValue(ppnAnalog);
                             physical.addMetadata(pathimagefiles);
 
                             dd.setPhysicalDocStruct(physical);
@@ -258,7 +295,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
                         try {
                             MetsMods mm = new MetsMods(this.prefs);
                             mm.setDigitalDocument(fileformat.getDigitalDocument());
-                            String fileName = getImportFolder() + data + ".xml";
+                            String fileName = getImportFolder() + ppnAnalog + ".xml";
                             logger.debug("Writing '" + fileName + "' into given folder...");
                             mm.write(fileName);
                             io.setMetsFilename(fileName);
@@ -291,17 +328,352 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
         return answer;
     }
 
+    private String getDigitalPPN() {
+        for (StringPair sp : identifierList) {
+            if (sp.getTwo().equals(ppnAnalog)) {
+                return sp.getOne();
+            }
+        }
+
+        return "";
+    }
+
+    private void generateIdentifierList() {
+        {
+            StringPair sp = new StringPair("443394377", "001838806");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443394725", "001838814");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("434788260", "002268086");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435160974", "002200422");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435162101", "000546739");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443395209", "002239434");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443395632", "002239442");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("44339587X", "002239450");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443396124", "001782568");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443400903", "000220949");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443401101", "000220957");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435163558", "00426990X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435201492", "001815385");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435202235", "009814116");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435202952", "006633064");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435206125", "006757936");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435206869", "006818803");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435209175", "007592825");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435212486", "006557511");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435212974", "035977396");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435378759", "002048752");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435379577", "00659056X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435379968", "003245101");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435380362", "003776395");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435380834", "001400169");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443401349", "000779962");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443401713", "000779970");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443402043", "000779989");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443409153", "000876828");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443409463", "000876836");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443409633", "000876844");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443409862", "000876852");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443409994", "000876860");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443410178", "000876879");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435423223", "000438855");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443415927", "000181498");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443416125", "02126175X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435423460", "008990956");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443416559", "000158437");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435423762", "00030879X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443434743", "008237360");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443434883", "008237379");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435424114", "007249454");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435424327", "000196606");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435505025", "003274527");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435510207", "001021362");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435510541", "007607024");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435510703", "053223721");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435510894", "001150979");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443435022", "004661877");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443435162", "002235730");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443435375", "000035556");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443208107", "000674710");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443209693", "056668023");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("44343588X", "089633857");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443435979", "007083327");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436142", "007083335");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436304", "007083319");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443210225", "008978921");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436541", "025519956");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436657", "025520016");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("44321087X", "007587155");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443211221", "004545982");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443211469", "055416942");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436746", "001120476");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436924", "001120441");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443437165", "00112045X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443437335", "001120468");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443370060", "002240963");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443370818", "004177339");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443371393", "013657755");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443371555", "017749778");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("44337175X", "072756713");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443372012", "004168666");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443372187", "053411358");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443374953", "000301914");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443375321", "00509139X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443375607", "003128148");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443375844", "008027013");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("44337600X", "00166395X");
+            identifierList.add(sp);
+        }
+    }
+
     private void moveData() {
 
-        File imageFolder = new File(ROOT_FOLDER, data);
+        File imageFolder = new File(ROOT_FOLDER, ppnAnalog);
 
         File destination =
-                new File(getImportFolder() + File.separator + data + File.separator + "images" + File.separator + getProcessTitle()
+                new File(getImportFolder() + File.separator + ppnAnalog + File.separator + "images" + File.separator + getProcessTitle()
                         + IMAGE_FOLDER_EXTENSION);
         destination.mkdirs();
         try {
+            logger.info("copy data from " + imageFolder.getAbsolutePath() + " to " + destination.getAbsolutePath());
+            // TODO
             org.apache.commons.io.FileUtils.copyDirectory(imageFolder, destination);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error(e);
         }
 
@@ -423,4 +795,10 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
     //      }
     //
     //  }
+
+    @Override
+    public void setForm(MassImportForm form) {
+       this.form = form;
+        
+    }
 }
