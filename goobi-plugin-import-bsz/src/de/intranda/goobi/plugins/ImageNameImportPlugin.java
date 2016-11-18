@@ -115,7 +115,6 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
         return PLUGIN_NAME;
     }
 
-    @Override
     public String getDescription() {
         return PLUGIN_NAME;
     }
@@ -143,10 +142,8 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             Fileformat myRdf = myImportOpac.search("12", ppnDigital, coc, prefs);
             if (myRdf != null) {
                 try {
-                    ats =
-                            myImportOpac.createAtstsl(
-                                    myRdf.getDigitalDocument().getLogicalDocStruct()
-                                            .getAllMetadataByType(prefs.getMetadataTypeByName("TitleDocMain")).get(0).getValue(), null).toLowerCase();
+                    ats = myImportOpac.createAtstsl(myRdf.getDigitalDocument().getLogicalDocStruct().getAllMetadataByType(prefs.getMetadataTypeByName(
+                            "TitleDocMain")).get(0).getValue(), null).toLowerCase();
 
                 } catch (Exception e) {
                     ats = "";
@@ -177,12 +174,18 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
         // add analog, add prefix bsz
 
         if (identifierSourceList.isEmpty()) {
-             try {
+            try {
                 Metadata md = new Metadata(CATALOGIDSOURCE_TYPE);
                 md.setValue("bsz" + ppnAnalog);
                 ds.addMetadata(md);
             } catch (MetadataTypeNotAllowedException e) {
                 logger.error(e);
+            }
+        } else {
+            for (Metadata md : identifierSourceList) {
+                if (!md.getValue().startsWith("bsz")) {
+                    md.setValue("bsz" + md.getValue());
+                }
             }
         }
 
@@ -340,39 +343,31 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
     private void generateIdentifierList() {
         {
-            StringPair sp = new StringPair("443394377", "001838806");
+            StringPair sp = new StringPair("435423762", "00030879X");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443394725", "001838814");
+            StringPair sp = new StringPair("443435375", "000035556");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("434788260", "002268086");
+            StringPair sp = new StringPair("443437165", "00112045X");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435160974", "002200422");
+            StringPair sp = new StringPair("443416559", "000158437");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435162101", "000546739");
+            StringPair sp = new StringPair("44337600X", "00166395X");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443395209", "002239434");
+            StringPair sp = new StringPair("443415927", "000181498");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443395632", "002239442");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("44339587X", "002239450");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("443396124", "001782568");
+            StringPair sp = new StringPair("435424327", "000196606");
             identifierList.add(sp);
         }
         {
@@ -384,43 +379,23 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
+            StringPair sp = new StringPair("443374953", "000301914");
+            identifierList.add(sp);
+        }
+        {
             StringPair sp = new StringPair("435163558", "00426990X");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435201492", "001815385");
+            StringPair sp = new StringPair("435423223", "000438855");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435202235", "009814116");
+            StringPair sp = new StringPair("443375321", "00509139X");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435202952", "006633064");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435206125", "006757936");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435206869", "006818803");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435209175", "007592825");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435212486", "006557511");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435212974", "035977396");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435378759", "002048752");
+            StringPair sp = new StringPair("435162101", "000546739");
             identifierList.add(sp);
         }
         {
@@ -428,15 +403,19 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435379968", "003245101");
+            StringPair sp = new StringPair("443208107", "000674710");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435380362", "003776395");
+            StringPair sp = new StringPair("467811105", "00714105X");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435380834", "001400169");
+            StringPair sp = new StringPair("468062203", "00714119X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468063412", "00714122X");
             identifierList.add(sp);
         }
         {
@@ -476,59 +455,19 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435423223", "000438855");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("443415927", "000181498");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("443416125", "02126175X");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435423460", "008990956");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("443416559", "000158437");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435423762", "00030879X");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("443434743", "008237360");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("443434883", "008237379");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435424114", "007249454");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435424327", "000196606");
-            identifierList.add(sp);
-        }
-        {
-            StringPair sp = new StringPair("435505025", "003274527");
-            identifierList.add(sp);
-        }
-        {
             StringPair sp = new StringPair("435510207", "001021362");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435510541", "007607024");
+            StringPair sp = new StringPair("443436924", "001120441");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("435510703", "053223721");
+            StringPair sp = new StringPair("443437335", "001120468");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436746", "001120476");
             identifierList.add(sp);
         }
         {
@@ -536,7 +475,35 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443435022", "004661877");
+            StringPair sp = new StringPair("435380834", "001400169");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443396124", "001782568");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435201492", "001815385");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443394377", "001838806");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443394725", "001838814");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435378759", "002048752");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443416125", "02126175X");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435160974", "002200422");
             identifierList.add(sp);
         }
         {
@@ -544,19 +511,75 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443435375", "000035556");
+            StringPair sp = new StringPair("443395209", "002239434");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443208107", "000674710");
+            StringPair sp = new StringPair("443395632", "002239442");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443209693", "056668023");
+            StringPair sp = new StringPair("44339587X", "002239450");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("44343588X", "089633857");
+            StringPair sp = new StringPair("443370060", "002240963");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("434788260", "002268086");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443375607", "003128148");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435379968", "003245101");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435505025", "003274527");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435380362", "003776395");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443372012", "004168666");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443370818", "004177339");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443211221", "004545982");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443435022", "004661877");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435212486", "006557511");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435202952", "006633064");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435206125", "006757936");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435206869", "006818803");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("443436304", "007083319");
             identifierList.add(sp);
         }
         {
@@ -568,19 +591,131 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443436304", "007083319");
+            StringPair sp = new StringPair("46288810X", "007140894");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443210225", "008978921");
+            StringPair sp = new StringPair("462889246", "007140908");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443436541", "025519956");
+            StringPair sp = new StringPair("462906124", "007140916");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443436657", "025520016");
+            StringPair sp = new StringPair("462915409", "007140924");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("462915832", "007140932");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("462916367", "007140940");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467757356", "007140959");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467758182", "007140967");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467758492", "007140975");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("46775859X", "007140983");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467768692", "007140991");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467768919", "007141009");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467769575", "007141017");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467769826", "007141025");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467770166", "007141033");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467770255", "007141041");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467811555", "007141068");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468002766", "007141076");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("46800307X", "007141084");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468003282", "007141092");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("46800355X", "007141106");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("46800372X", "007141114");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("007141122", "007141122");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468010947", "007141130");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468011277", "007141149");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468011420", "007141157");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468011730", "007141165");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468011951", "007141173");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468012206", "007141181");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468062548", "007141203");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468063080", "007141211");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435424114", "007249454");
             identifierList.add(sp);
         }
         {
@@ -588,35 +723,39 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443211221", "004545982");
+            StringPair sp = new StringPair("435209175", "007592825");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443211469", "055416942");
+            StringPair sp = new StringPair("435510541", "007607024");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443436746", "001120476");
+            StringPair sp = new StringPair("443375844", "008027013");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443436924", "001120441");
+            StringPair sp = new StringPair("443434743", "008237360");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443437165", "00112045X");
+            StringPair sp = new StringPair("443434883", "008237379");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443437335", "001120468");
+            StringPair sp = new StringPair("443210225", "008978921");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443370060", "002240963");
+            StringPair sp = new StringPair("435423460", "008990956");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443370818", "004177339");
+            StringPair sp = new StringPair("435202235", "009814116");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("430939787", "011770007");
             identifierList.add(sp);
         }
         {
@@ -628,11 +767,39 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("44337175X", "072756713");
+            StringPair sp = new StringPair("443436541", "025519956");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443372012", "004168666");
+            StringPair sp = new StringPair("443436657", "025520016");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("431333815", "035072075");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435212974", "035977396");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("467811385", "045086621");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("43133286X", "049472445");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("432167501", "051225395");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("43215101X", "052645894");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("435510703", "053223721");
             identifierList.add(sp);
         }
         {
@@ -640,23 +807,71 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443374953", "000301914");
+            StringPair sp = new StringPair("443211469", "055416942");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443375321", "00509139X");
+            StringPair sp = new StringPair("443209693", "056668023");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443375607", "003128148");
+            StringPair sp = new StringPair("44337175X", "072756713");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("443375844", "008027013");
+            StringPair sp = new StringPair("468012397", "085162019");
             identifierList.add(sp);
         }
         {
-            StringPair sp = new StringPair("44337600X", "00166395X");
+            StringPair sp = new StringPair("468063765", "085263826");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468064001", "085263877");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468064303", "085263931");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468064494", "085263990");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468254404", "085264091");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468254536", "085264164");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468254919", "085264202");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("46825501X", "085264261");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468256245", "085264350");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468256482", "085264385");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468256687", "085264423");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("468256903", "085264490");
+            identifierList.add(sp);
+        }
+        {
+            StringPair sp = new StringPair("44343588X", "089633857");
             identifierList.add(sp);
         }
     }
@@ -665,9 +880,8 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
         File imageFolder = new File(ROOT_FOLDER, ppnAnalog);
 
-        File destination =
-                new File(getImportFolder() + File.separator + ppnAnalog + File.separator + "images" + File.separator + getProcessTitle()
-                        + IMAGE_FOLDER_EXTENSION);
+        File destination = new File(getImportFolder() + File.separator + ppnAnalog + File.separator + "images" + File.separator + getProcessTitle()
+                + IMAGE_FOLDER_EXTENSION);
         destination.mkdirs();
         try {
             logger.info("copy data from " + imageFolder.getAbsolutePath() + " to " + destination.getAbsolutePath());
@@ -798,7 +1012,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
 
     @Override
     public void setForm(MassImportForm form) {
-       this.form = form;
-        
+        this.form = form;
+
     }
 }
