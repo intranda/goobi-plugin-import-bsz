@@ -137,7 +137,7 @@ public class ImageNameImportPlugin implements IImportPlugin, IPlugin {
     @Override
     public Fileformat convertData() throws ImportPluginException {
         try {
-            ConfigOpacCatalogue coc = new ConfigOpac().getCatalogueByName("SWB");
+            ConfigOpacCatalogue coc = ConfigOpac.getInstance().getCatalogueByName("SWB");
             IOpacPlugin myImportOpac = (IOpacPlugin) PluginLoader.getPluginByTitle(PluginType.Opac, coc.getOpacType());
             Fileformat myRdf = myImportOpac.search("12", ppnDigital, coc, prefs);
             if (myRdf != null) {
