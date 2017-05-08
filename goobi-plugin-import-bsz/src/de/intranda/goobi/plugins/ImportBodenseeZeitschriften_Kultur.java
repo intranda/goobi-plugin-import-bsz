@@ -1,20 +1,17 @@
 package de.intranda.goobi.plugins;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.apache.pdfbox.exceptions.COSVisitorException;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.goobi.production.enums.ImportReturnValue;
 import org.goobi.production.enums.ImportType;
 import org.goobi.production.enums.PluginType;
@@ -47,10 +44,8 @@ import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
 import ugh.dl.MetadataType;
 import ugh.dl.Prefs;
-import ugh.dl.RomanNumeral;
 import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
-import ugh.exceptions.TypeNotAllowedAsChildException;
 import ugh.exceptions.TypeNotAllowedForParentException;
 import ugh.exceptions.UGHException;
 import ugh.exceptions.WriteException;
@@ -64,8 +59,12 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 	private static final String IMPORT_FOLDER = "/Users/steffen/Desktop/BSZ/";
 	private static final String IMAGE_FOLDER_EXTENSION = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
 	private static final String IMAGE_FILE_PREFIX_TO_REMOVE = "/data/kebweb/kult/";
+	private static final String IMAGE_FILE_SUFFIX_TO_USE = ".jpg";
 	//SQL converted to JSON simply using http://codebeautify.org/sql-to-json-converter
 	private static final String IMPORT_FILE = IMPORT_FOLDER + "import_kultur.json";
+	
+	// after the import this command has to be called for the conversion of single page pdfs into alto files (out of Goobi)
+	// /usr/bin/java -jar {scriptsFolder}Pdf2Alto.jar {processpath}/ocr/{processtitle}_pdf/ {tifpath} {processpath}/ocr/{processtitle}_alto/
 	
 	private MassImportForm form;
 	private Prefs prefs;
@@ -142,15 +141,19 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 						
 						importObjectYear.setImportReturnValue(ImportReturnValue.ExportFinished);
 					} catch (IOException e) {
-						log.error("IOException during the massimport in ImportBodenseeZeitschriften_Kultur", e);
+						log.error("IOException during the massimport ImportBodenseeZeitschriften_Kultur", e);
 						importObjectYear.setErrorMessage(e.getMessage());
 						importObjectYear.setImportReturnValue(ImportReturnValue.InvalidData);
 					} catch (WriteException e) {
-						log.error("WriteException during the massimport in ImportBodenseeZeitschriften_Kultur", e);
+						log.error("WriteException during the massimport ImportBodenseeZeitschriften_Kultur", e);
 						importObjectYear.setErrorMessage(e.getMessage());
 						importObjectYear.setImportReturnValue(ImportReturnValue.WriteError);
 					} catch (UGHException e) {
-						log.error("PreferencesException during the massimport in ImportBodenseeZeitschriften_Kultur", e);
+						log.error("PreferencesException during the massimport ImportBodenseeZeitschriften_Kultur", e);
+						importObjectYear.setErrorMessage(e.getMessage());
+						importObjectYear.setImportReturnValue(ImportReturnValue.InvalidData);
+					} catch (COSVisitorException e) {
+						log.error("COSVisitorException during the PDF conversion in massimport ImportBodenseeZeitschriften_Kultur", e);
 						importObjectYear.setErrorMessage(e.getMessage());
 						importObjectYear.setImportReturnValue(ImportReturnValue.InvalidData);
 					}
@@ -171,13 +174,15 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 	 * add all issues and pages to the volume
 	 * @param ff
 	 */
-	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException{
+	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException, COSVisitorException{
 		File targetFolderImages = new File(getImportFolder() + ppn_volume + File.separator + "images" 
         		+ File.separator + inProcessTitle + IMAGE_FOLDER_EXTENSION);
 		File targetFolderPdf = new File(getImportFolder() + ppn_volume + File.separator + "ocr" 
         		+ File.separator);
+		File targetFolderPdfSingles = new File(targetFolderPdf, inProcessTitle + "_pdf");
         targetFolderImages.mkdirs();
 		targetFolderPdf.mkdirs();
+		targetFolderPdfSingles.mkdirs();
 		
 		DocStruct physicaldocstruct = ff.getDigitalDocument().getPhysicalDocStruct();
 		DocStruct volume = ff.getDigitalDocument().getLogicalDocStruct().getAllChildren().get(0);
@@ -201,6 +206,8 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 			// add all issues and pages from one year to this volume
 			if (element.getJahr().equals(inYear)){
 				
+				String issueNumber = element.getBookletid().substring(element.getBookletid().lastIndexOf(".") + 1);
+
 				// create new issue docstruct if necessary
 				if (!lastIssue.equals(element.getBookletid())){
 					lastIssue = element.getBookletid();
@@ -208,7 +215,7 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 					
 					// add title to issue
 					Metadata issueTitleMd = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
-					issueTitleMd.setValue("Heft " + element.getBookletid().substring(element.getBookletid().lastIndexOf(".") + 1));
+					issueTitleMd.setValue("Heft " + issueNumber);
 					issue.addMetadata(issueTitleMd);
 					volume.addChild(issue);
 					
@@ -216,13 +223,28 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 					File pdfFile = new File(IMPORT_FOLDER, element.getPageid().substring(0, element.getPageid().lastIndexOf("_")) + ".pdf");
 					if (pdfFile.exists()){
 						FileUtils.copyFile(pdfFile, new File(targetFolderPdf, inProcessTitle + ".pdf"));
+						// create singe page pdf files here too
+						PDDocument inputDocument = PDDocument.loadNonSeq(pdfFile, null);
+						int currentNo = 1;
+						for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
+							PDPage pdPage = (PDPage) inputDocument.getDocumentCatalog().getAllPages().get(page - 1);
+							PDDocument outputDocument = new PDDocument();
+							outputDocument.addPage(pdPage);
+							File pdfout = new File(targetFolderPdfSingles, String.format("%08d", currentNo++) + ".pdf");
+							outputDocument.save(pdfout.getAbsolutePath());
+							outputDocument.close();
+						}
+						inputDocument.close();
+						
+						
 					}
 				}
 				
 				// copy each image into right place in tmp folder
 				File imageFile = new File(IMPORT_FOLDER, element.getJpg().substring(IMAGE_FILE_PREFIX_TO_REMOVE.length() -1));
 				log.info("copy image from " + imageFile.getAbsolutePath() + " to " + targetFolderImages.getAbsolutePath());
-				FileUtils.copyFile(imageFile, new File(targetFolderImages, imageFile.getName()));
+				FileUtils.copyFile(imageFile, new File(targetFolderImages, String.format("%08d", physicalPageNumber) + IMAGE_FILE_SUFFIX_TO_USE));
+				//FileUtils.copyFile(imageFile, new File(targetFolderImages, StringUtils.leftPad(issueNumber, 2, "0") + "_" + String.format("%08d", physicalPageNumber) + IMAGE_FILE_SUFFIX_TO_USE));
 				
 				// no matter if new or current issue, add now all pages to current issue
 				if (issue!=null){
@@ -255,7 +277,6 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 						cf.setLocation("file://" + inProcessTitle + IMAGE_FOLDER_EXTENSION + imageFile.getName());
 					}
 					dsPage.addContentFile(cf);
-
 					
 				}
 			}
