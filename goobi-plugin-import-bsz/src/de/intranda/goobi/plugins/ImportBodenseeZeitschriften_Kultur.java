@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.goobi.production.enums.ImportReturnValue;
 import org.goobi.production.enums.ImportType;
 import org.goobi.production.enums.PluginType;
@@ -38,12 +39,15 @@ import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
 import lombok.extern.log4j.Log4j;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
+import ugh.dl.ContentFile;
 import ugh.dl.DigitalDocument;
 import ugh.dl.DocStruct;
 import ugh.dl.DocStructType;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
+import ugh.dl.MetadataType;
 import ugh.dl.Prefs;
+import ugh.dl.RomanNumeral;
 import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.TypeNotAllowedAsChildException;
@@ -175,10 +179,19 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
         targetFolderImages.mkdirs();
 		targetFolderPdf.mkdirs();
 		
+		DocStruct physicaldocstruct = ff.getDigitalDocument().getPhysicalDocStruct();
 		DocStruct volume = ff.getDigitalDocument().getLogicalDocStruct().getAllChildren().get(0);
 		DocStructType issueType = prefs.getDocStrctTypeByName("PeriodicalIssue");
 		DocStruct issue = null;
 		String lastIssue = "";
+		int physicalPageNumber = 1;
+		
+		DocStruct logicalDocstruct = ff.getDigitalDocument().getLogicalDocStruct();
+        if (logicalDocstruct.getType().isAnchor()) {
+            if (logicalDocstruct.getAllChildren() != null && logicalDocstruct.getAllChildren().size() > 0) {
+            	logicalDocstruct = logicalDocstruct.getAllChildren().get(0);
+            }
+        }
 		
 		JsonReader reader = new JsonReader(new FileReader(IMPORT_FILE));
 		Gson gson = new GsonBuilder().create();
@@ -195,7 +208,7 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 					
 					// add title to issue
 					Metadata issueTitleMd = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
-					issueTitleMd.setValue(element.getBookletid().substring(element.getBookletid().lastIndexOf(".")));
+					issueTitleMd.setValue("Heft " + element.getBookletid().substring(element.getBookletid().lastIndexOf(".") + 1));
 					issue.addMetadata(issueTitleMd);
 					volume.addChild(issue);
 					
@@ -213,6 +226,36 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 				
 				// no matter if new or current issue, add now all pages to current issue
 				if (issue!=null){
+					
+					DocStructType newPage = prefs.getDocStrctTypeByName("page");
+					DocStruct dsPage = ff.getDigitalDocument().createDocStruct(newPage);
+
+					// physical page number
+					physicaldocstruct.addChild(dsPage);
+					MetadataType mdt = prefs.getMetadataTypeByName("physPageNumber");
+					Metadata mdTemp = new Metadata(mdt);
+					mdTemp.setValue(String.valueOf(physicalPageNumber++));
+					dsPage.addMetadata(mdTemp);
+
+					// logical page number
+					mdt = prefs.getMetadataTypeByName("logicalPageNumber");
+					mdTemp = new Metadata(mdt);
+					mdTemp.setValue(element.getLabel());
+
+					// assign page to topscruct
+					dsPage.addMetadata(mdTemp);
+					volume.addReferenceTo(dsPage, "logical_physical");
+					issue.addReferenceTo(dsPage, "logical_physical");
+					
+					// image name
+					ContentFile cf = new ContentFile();
+					if (SystemUtils.IS_OS_WINDOWS) {
+						cf.setLocation("file:/" + inProcessTitle + IMAGE_FOLDER_EXTENSION + imageFile.getName());
+					} else {
+						cf.setLocation("file://" + inProcessTitle + IMAGE_FOLDER_EXTENSION + imageFile.getName());
+					}
+					dsPage.addContentFile(cf);
+
 					
 				}
 			}
