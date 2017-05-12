@@ -3,6 +3,10 @@ package de.intranda.goobi.plugins;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -56,7 +60,8 @@ import ugh.fileformats.mets.MetsMods;
 public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugin {
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_Kultur";
 
-	private static final String IMPORT_FOLDER = "/Users/steffen/Desktop/BSZ/";
+	private static final String IMPORT_FOLDER = "/opt/digiverso/goobi/metadata/25810/images/kult/";
+//	private static final String IMPORT_FOLDER = "/Users/steffen/Desktop/BSZ/";
 	private static final String IMAGE_FOLDER_EXTENSION = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
 	private static final String IMAGE_FILE_PREFIX_TO_REMOVE = "/data/kebweb/kult/";
 	private static final String IMAGE_FILE_SUFFIX_TO_USE = ".jpg";
@@ -177,11 +182,9 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException, COSVisitorException{
 		File targetFolderImages = new File(getImportFolder() + ppn_volume + File.separator + "images" 
         		+ File.separator + inProcessTitle + IMAGE_FOLDER_EXTENSION);
-		File targetFolderPdf = new File(getImportFolder() + ppn_volume + File.separator + "ocr" 
-        		+ File.separator);
-		File targetFolderPdfSingles = new File(targetFolderPdf, inProcessTitle + "_pdf");
+		File targetFolderPdfSingles = new File(getImportFolder() + ppn_volume + File.separator + "ocr" 
+				+ File.separator + inProcessTitle + "_pdf");
         targetFolderImages.mkdirs();
-		targetFolderPdf.mkdirs();
 		targetFolderPdfSingles.mkdirs();
 		
 		DocStruct physicaldocstruct = ff.getDigitalDocument().getPhysicalDocStruct();
@@ -190,6 +193,30 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 		DocStruct issue = null;
 		String lastIssue = "";
 		int physicalPageNumber = 1;
+
+		
+		// copy pdf files into right place in tmp folder
+		int pdfCounter = 1;
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(IMPORT_FOLDER))) {
+			for (Path entry : stream) {
+				File f = entry.toFile();
+				if (f.getName().endsWith(".pdf") && f.getName().contains("_j" + inYear + "_")) {
+					// create single page pdf files
+					PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
+					for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
+						PDPage pdPage = (PDPage) inputDocument.getDocumentCatalog().getAllPages().get(page - 1);
+						PDDocument outputDocument = new PDDocument();
+						outputDocument.addPage(pdPage);
+						File pdfout = new File(targetFolderPdfSingles, String.format("%08d", pdfCounter++) + ".pdf");
+						outputDocument.save(pdfout.getAbsolutePath());
+						outputDocument.close();
+					}
+					inputDocument.close();
+				}
+			}
+		}catch (Exception e) {
+			log.error("Error listing all folders in import root", e);
+		}
 		
 		DocStruct logicalDocstruct = ff.getDigitalDocument().getLogicalDocStruct();
         if (logicalDocstruct.getType().isAnchor()) {
@@ -218,26 +245,6 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 					issueTitleMd.setValue("Heft " + issueNumber);
 					issue.addMetadata(issueTitleMd);
 					volume.addChild(issue);
-					
-					// copy pdf file into right place in tmp folder
-					File pdfFile = new File(IMPORT_FOLDER, element.getPageid().substring(0, element.getPageid().lastIndexOf("_")) + ".pdf");
-					if (pdfFile.exists()){
-						FileUtils.copyFile(pdfFile, new File(targetFolderPdf, inProcessTitle + ".pdf"));
-						// create singe page pdf files here too
-						PDDocument inputDocument = PDDocument.loadNonSeq(pdfFile, null);
-						int currentNo = 1;
-						for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
-							PDPage pdPage = (PDPage) inputDocument.getDocumentCatalog().getAllPages().get(page - 1);
-							PDDocument outputDocument = new PDDocument();
-							outputDocument.addPage(pdPage);
-							File pdfout = new File(targetFolderPdfSingles, String.format("%08d", currentNo++) + ".pdf");
-							outputDocument.save(pdfout.getAbsolutePath());
-							outputDocument.close();
-						}
-						inputDocument.close();
-						
-						
-					}
 				}
 				
 				// copy each image into right place in tmp folder
