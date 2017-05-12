@@ -194,6 +194,30 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 		String lastIssue = "";
 		int physicalPageNumber = 1;
 
+		// add title to volume
+		Metadata mdVolTitle = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
+		mdVolTitle.setValue("Zeitschrift für Kultur und Gesellschaft " + inYear);
+		volume.addMetadata(mdVolTitle);
+		// add current number
+		Metadata mdVolNum = new Metadata(prefs.getMetadataTypeByName("CurrentNo"));
+		mdVolNum.setValue(inYear);
+		volume.addMetadata(mdVolNum);
+		// add current number sorting
+		Metadata mdVolNumSort = new Metadata(prefs.getMetadataTypeByName("CurrentNoSorting"));
+		mdVolNumSort.setValue(inYear);
+		volume.addMetadata(mdVolNumSort);
+		// add viewer theme
+		Metadata mdViewer = new Metadata(prefs.getMetadataTypeByName("ViewerSubTheme"));
+		mdViewer.setValue("bsz-st-bodenseebibliotheken");
+		volume.addMetadata(mdViewer);
+		// add collections
+		Metadata mdColl = new Metadata(prefs.getMetadataTypeByName("singleDigCollection"));
+		mdColl.setValue("ZS_RegioBodensee");
+		volume.addMetadata(mdColl);
+		// add publication year
+		Metadata mdVolYear = new Metadata(prefs.getMetadataTypeByName("PublicationYear"));
+		mdVolYear.setValue(inYear);
+		volume.addMetadata(mdVolYear);
 		
 		// copy pdf files into right place in tmp folder
 		int pdfCounter = 1;
@@ -241,9 +265,18 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 					issue = ff.getDigitalDocument().createDocStruct(issueType);
 					
 					// add title to issue
-					Metadata issueTitleMd = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
-					issueTitleMd.setValue("Heft " + issueNumber);
-					issue.addMetadata(issueTitleMd);
+					Metadata mdIssueTitle = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
+					mdIssueTitle.setValue("Heft " + issueNumber + " / " + inYear);
+					issue.addMetadata(mdIssueTitle);
+					// add publication year
+					Metadata mdYear = new Metadata(prefs.getMetadataTypeByName("PublicationYear"));
+					mdYear.setValue(inYear);
+					issue.addMetadata(mdYear);
+					// add publication date
+					Metadata mdDate = new Metadata(prefs.getMetadataTypeByName("DateOfPublication"));
+					mdDate.setValue(inYear + issueNumber + "01");
+					issue.addMetadata(mdDate);
+					
 					volume.addChild(issue);
 				}
 				
@@ -312,6 +345,15 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 			Metadata md = new Metadata(prefs.getMetadataTypeByName("CatalogIDDigital"));
 			md.setValue(ppn);
 			ds.addMetadata(md);
+			// add viewer theme
+			Metadata mdViewer = new Metadata(prefs.getMetadataTypeByName("ViewerSubTheme"));
+			mdViewer.setValue("bsz-st-bodenseebibliotheken");
+			ds.addMetadata(mdViewer);
+			// add collections
+			Metadata mdColl = new Metadata(prefs.getMetadataTypeByName("singleDigCollection"));
+			mdColl.setValue("ZS_RegioBodensee");
+			ds.addMetadata(mdColl);
+			
 			
 			// assign a ppn digital to the child docstruct (volume)
 			if (ds.getType().isAnchor()) {
