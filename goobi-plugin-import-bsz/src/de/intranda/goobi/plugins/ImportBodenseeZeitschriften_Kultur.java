@@ -274,7 +274,7 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 					issue.addMetadata(mdYear);
 					// add publication date
 					Metadata mdDate = new Metadata(prefs.getMetadataTypeByName("DateOfPublication"));
-					mdDate.setValue(inYear + issueNumber + "01");
+					mdDate.setValue(inYear + "-" + issueNumber + "-01");
 					issue.addMetadata(mdDate);
 					
 					volume.addChild(issue);
