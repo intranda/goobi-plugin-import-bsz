@@ -60,8 +60,7 @@ import ugh.fileformats.mets.MetsMods;
 public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugin {
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_Kultur";
 
-	private static final String IMPORT_FOLDER = "/opt/digiverso/goobi/metadata/25810/images/kult/";
-//	private static final String IMPORT_FOLDER = "/Users/steffen/Desktop/BSZ/";
+	private static final String IMPORT_FOLDER = "/opt/digiverso/BSZ/Bodensee_Kultur/kult/";
 	private static final String IMAGE_FOLDER_EXTENSION = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
 	private static final String IMAGE_FILE_PREFIX_TO_REMOVE = "/data/kebweb/kult/";
 	private static final String IMAGE_FILE_SUFFIX_TO_USE = ".jpg";
