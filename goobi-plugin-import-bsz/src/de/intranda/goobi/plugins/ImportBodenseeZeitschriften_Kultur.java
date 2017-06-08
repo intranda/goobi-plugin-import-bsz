@@ -13,6 +13,7 @@ import org.apache.commons.lang.SystemUtils;
 import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.goobi.goobiScript.GoobiScriptImport;
 import org.goobi.production.enums.ImportReturnValue;
 import org.goobi.production.enums.ImportType;
 import org.goobi.production.enums.PluginType;
@@ -21,6 +22,7 @@ import org.goobi.production.importer.ImportObject;
 import org.goobi.production.importer.Record;
 import org.goobi.production.plugin.PluginLoader;
 import org.goobi.production.plugin.interfaces.IImportPlugin;
+import org.goobi.production.plugin.interfaces.IImportPluginVersion2;
 import org.goobi.production.plugin.interfaces.IOpacPlugin;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.properties.ImportProperty;
@@ -55,7 +57,7 @@ import ugh.fileformats.mets.MetsMods;
 
 @PluginImplementation
 @Log4j
-public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugin {
+public class ImportBodenseeZeitschriften_Kultur implements IImportPluginVersion2, IPlugin {
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_Kultur";
 
 	private static final String IMPORT_FOLDER = "/opt/digiverso/BSZ/Bodensee_Kultur/kult/";
@@ -349,7 +351,6 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 			mdColl.setValue("ZS_RegioBodensee");
 			ds.addMetadata(mdColl);
 			
-			
 			// assign a ppn digital to the child docstruct (volume)
 			if (ds.getType().isAnchor()) {
 				DocStruct child = ds.getAllChildren().get(0);
@@ -365,24 +366,6 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 		return null;
 	}
 	
-//	private List<BSZ_Kultur_Element> getKulturElements(){
-//		Gson gson = new Gson();
-//		BufferedReader br = new BufferedReader(new FileReader(IMPORT_FILE));
-////		Type type = new TypeToken<List<Model>>(){}.getType();
-//		List<BSZ_Kultur_Element> elements = gson.fromJson(br, List<BSZ_Kultur_Element>);
-//		
-//		
-////		try(Reader reader = new InputStreamReader(JsonToJava.class.getResourceAsStream("/Server1.json"), "UTF-8")){
-////            
-////        	Gson gson = new GsonBuilder().create();
-////            Person p = gson.fromJson(reader, Person.class);
-////            System.out.println(p);
-////        }
-//	}
-	
-	
-
-
 	@Override
 	public List<Record> generateRecordsFromFilenames(List<String> filenames) {
 		List<Record> records = new ArrayList<Record>();
@@ -397,11 +380,6 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 	
 	@Override
 	public void deleteFiles(List<String> selectedFilenames) {
-		// for (String filename : selectedFilenames) {
-		// File f = new File(ROOT_FOLDER, filename);
-		// // TODO delete
-		// logger.debug("Delete folder " + f.getAbsolutePath());
-		// }
 	}
 	
 	
@@ -499,29 +477,17 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 	public String getProcessTitle() {
 		return ats;
 	}
-	
-	// public static void main(String[] args) {
-	//
-	// String path = "/home/robert/Downloads/bsz/007140975";
-	//
-	// List<String> values = validate(path);
-	// if (!values.isEmpty()) {
-	// for (String message : values) {
-	// logger.error(message);
-	// }
-	// } else {
-	// logger.debug("Folder " + path + " is valid.");
-	// }
-	// ImageNameImportPlugin plugin = new ImageNameImportPlugin();
-	// for (String filename : plugin.getAllFilenames()) {
-	// System.out.println(filename);
-	// }
-	//
-	// }
 
 	@Override
 	public void setForm(MassImportForm form) {
 		this.form = form;
 
 	}
+
+	@Override
+	public boolean isRunnableAsGoobiScript() {
+		return true;
+	}
+
+	
 }
