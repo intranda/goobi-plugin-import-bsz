@@ -3,10 +3,7 @@ package de.intranda.goobi.plugins;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -35,6 +32,7 @@ import com.google.gson.stream.JsonReader;
 import de.intranda.goobi.plugins.bsz.BSZ_Kultur_Element;
 import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.forms.MassImportForm;
+import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.exceptions.ImportPluginException;
 import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
@@ -220,25 +218,23 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPlugin, IPlugi
 		
 		// copy pdf files into right place in tmp folder
 		int pdfCounter = 1;
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(IMPORT_FOLDER))) {
-			for (Path entry : stream) {
-				File f = entry.toFile();
-				if (f.getName().endsWith(".pdf") && f.getName().contains("_j" + inYear + "_")) {
-					// create single page pdf files
-					PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
-					for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
-						PDPage pdPage = (PDPage) inputDocument.getDocumentCatalog().getAllPages().get(page - 1);
-						PDDocument outputDocument = new PDDocument();
-						outputDocument.addPage(pdPage);
-						File pdfout = new File(targetFolderPdfSingles, String.format("%08d", pdfCounter++) + ".pdf");
-						outputDocument.save(pdfout.getAbsolutePath());
-						outputDocument.close();
-					}
-					inputDocument.close();
+		
+		List<Path> allMyFiles = NIOFileUtils.listFiles(IMPORT_FOLDER);
+		for (Path entry : allMyFiles) {
+			File f = entry.toFile();
+			if (f.getName().endsWith(".pdf") && f.getName().contains("_j" + inYear + "_")) {
+				// create single page pdf files
+				PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
+				for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
+					PDPage pdPage = (PDPage) inputDocument.getDocumentCatalog().getAllPages().get(page - 1);
+					PDDocument outputDocument = new PDDocument();
+					outputDocument.addPage(pdPage);
+					File pdfout = new File(targetFolderPdfSingles, String.format("%08d", pdfCounter++) + ".pdf");
+					outputDocument.save(pdfout.getAbsolutePath());
+					outputDocument.close();
 				}
+				inputDocument.close();
 			}
-		}catch (Exception e) {
-			log.error("Error listing all folders in import root", e);
 		}
 		
 		DocStruct logicalDocstruct = ff.getDigitalDocument().getLogicalDocStruct();
