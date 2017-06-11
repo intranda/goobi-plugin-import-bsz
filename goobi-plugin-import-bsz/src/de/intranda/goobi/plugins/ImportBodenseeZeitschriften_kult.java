@@ -13,7 +13,6 @@ import org.apache.commons.lang.SystemUtils;
 import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.goobi.goobiScript.GoobiScriptImport;
 import org.goobi.production.enums.ImportReturnValue;
 import org.goobi.production.enums.ImportType;
 import org.goobi.production.enums.PluginType;
@@ -21,7 +20,6 @@ import org.goobi.production.importer.DocstructElement;
 import org.goobi.production.importer.ImportObject;
 import org.goobi.production.importer.Record;
 import org.goobi.production.plugin.PluginLoader;
-import org.goobi.production.plugin.interfaces.IImportPlugin;
 import org.goobi.production.plugin.interfaces.IImportPluginVersion2;
 import org.goobi.production.plugin.interfaces.IOpacPlugin;
 import org.goobi.production.plugin.interfaces.IPlugin;
@@ -57,27 +55,32 @@ import ugh.fileformats.mets.MetsMods;
 
 @PluginImplementation
 @Log4j
-public class ImportBodenseeZeitschriften_Kultur implements IImportPluginVersion2, IPlugin {
-	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_Kultur";
-
-	private static final String IMPORT_FOLDER = "/opt/digiverso/BSZ/Bodensee_Kultur/kult/";
-	private static final String IMAGE_FOLDER_EXTENSION = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
-	private static final String IMAGE_FILE_PREFIX_TO_REMOVE = "/data/kebweb/kult/";
-	private static final String IMAGE_FILE_SUFFIX_TO_USE = ".jpg";
-	//SQL converted to JSON simply using http://codebeautify.org/sql-to-json-converter
-	private static final String IMPORT_FILE = IMPORT_FOLDER + "import_kultur.json";
+public class ImportBodenseeZeitschriften_kult implements IImportPluginVersion2, IPlugin {
 	
-	// after the import this command has to be called for the conversion of single page pdfs into alto files (out of Goobi)
-	// /usr/bin/java -jar {scriptsFolder}Pdf2Alto.jar {processpath}/ocr/{processtitle}_pdf/ {tifpath} {processpath}/ocr/{processtitle}_alto/
+	private static final String BASIC_NAME = "kult";
+	private String ats = "kultur";
+	private static final String catalogue = "BSZ-BW";
+	private static final String ppn = "310869048";
+	
+	private static final String BASIC_FOLDER = "/opt/digiverso/BSZ/Bodensee/";
+	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
+	
+	//SQL converted to JSON simply using http://codebeautify.org/sql-to-json-converter
+	private static final String IMPORT_FILE = BASIC_FOLDER + BASIC_NAME + ".json";
+	private static final String IMPORT_FOLDER = BASIC_FOLDER + BASIC_NAME + "/";
+	
+	private static final String IMAGE_FOLDER_EXTENSION = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
+	private static final String IMAGE_FILE_PREFIX_TO_REMOVE = "/data/kebweb/" + BASIC_NAME + "/";
+	private static final String IMAGE_FILE_SUFFIX_TO_USE = ".jpg";
 	
 	private MassImportForm form;
 	private Prefs prefs;
 	private String data = "";
 	private String importFolder = "";
-	private String ats = "kultur";
-	private String catalogue = "BSZ-BW";
-	private String ppn = "310869048";
 	private String ppn_volume;
+
+	// after the import this command has to be called for the conversion of single page pdfs into alto files (out of Goobi)
+	// /usr/bin/java -jar {scriptsFolder}Pdf2Alto.jar {processpath}/ocr/{processtitle}_pdf/ {tifpath} {processpath}/ocr/{processtitle}_alto/
 	
 	@Override
 	public List<String> getAllFilenames() {
@@ -340,8 +343,13 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPluginVersion2
 			// assign a ppn digital to the anchor docstruct
 			DocStruct ds = myRdf.getDigitalDocument().getLogicalDocStruct();
 			Metadata md = new Metadata(prefs.getMetadataTypeByName("CatalogIDDigital"));
-			md.setValue(ppn);
+			md.setValue("bsz" + ppn);
 			ds.addMetadata(md);
+
+			// change existing source ppn to have a prefix
+			Metadata mdPPNsource = ds.getAllMetadataByType(prefs.getMetadataTypeByName("CatalogIDSource")).get(0);
+			mdPPNsource.setValue("bsz" +  mdPPNsource.getValue());
+			
 			// add viewer theme
 			Metadata mdViewer = new Metadata(prefs.getMetadataTypeByName("ViewerSubTheme"));
 			mdViewer.setValue("bsz-st-bodenseebibliotheken");
@@ -355,8 +363,13 @@ public class ImportBodenseeZeitschriften_Kultur implements IImportPluginVersion2
 			if (ds.getType().isAnchor()) {
 				DocStruct child = ds.getAllChildren().get(0);
 				Metadata md2 = new Metadata(prefs.getMetadataTypeByName("CatalogIDDigital"));
-				md2.setValue(ppn_volume);
+				md2.setValue("bsz" + ppn_volume);
 				child.addMetadata(md2);
+				
+				// change existing source ppn to have a prefix
+				Metadata mdPPNsourceChild = new Metadata(prefs.getMetadataTypeByName("CatalogIDSource"));
+				mdPPNsourceChild.setValue("bsz" + ppn_volume);
+				child.addMetadata(mdPPNsourceChild);
 			}
 			
 			return myRdf;
