@@ -3,7 +3,7 @@ package de.intranda.goobi.plugins.bsz;
 import lombok.Data;
 
 @Data
-public class BSZ_Kultur_Element {
+public class BSZ_BodenseeImport_Element {
 	private String pageid;
 	private String bookletid;
 	private String journalid;
