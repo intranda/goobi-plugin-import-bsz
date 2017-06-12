@@ -241,7 +241,7 @@ public class BSZ_BodenseeImport_Helper {
 	 * @throws IOException
 	 * @throws COSVisitorException
 	 */
-	private void extractPdf(String inYear, String inProcessTitle) throws IOException, COSVisitorException{
+	private void extractPdf(String inYear, String inProcessTitle, List<BSZ_BodenseeImport_Element> elements) throws IOException, COSVisitorException{
 		File targetFolderPdfSingles = new File(tempFolder + ppn_volume + File.separator + "ocr" 
 				+ File.separator + inProcessTitle + "_pdf");
 		targetFolderPdfSingles.mkdirs();
@@ -249,9 +249,15 @@ public class BSZ_BodenseeImport_Helper {
 		int pdfCounter = 1;
 		
 		List<Path> allMyFiles = NIOFileUtils.listFiles(bsz_import_folder);
+		if (elements.size()>0){
+			String firstImage = elements.get(0).getJpg().substring(image_file_prefix_to_remove.length() -1);
+			firstImage = firstImage.substring(0, firstImage.lastIndexOf("/"));
+			File folderPath = new File(bsz_import_folder, firstImage);
+			allMyFiles.addAll(NIOFileUtils.listFiles(folderPath.getAbsolutePath()));
+		}
 		for (Path entry : allMyFiles) {
 			File f = entry.toFile();
-			if (f.getName().endsWith(".pdf") && f.getName().contains("_j" + inYear + "_")) {
+			if (f.getName().endsWith(".pdf") && f.getName().toLowerCase().contains("j" + inYear + "")) {
 				// create single page pdf files
 				PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
 				for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
@@ -284,9 +290,6 @@ public class BSZ_BodenseeImport_Helper {
         		+ File.separator + inProcessTitle + image_folder_extension);
 		targetFolderImages.mkdirs();
 		
-		// extract given pdf file
-		extractPdf(inYear,inProcessTitle);
-		
 		DocStruct physicaldocstruct = ff.getDigitalDocument().getPhysicalDocStruct();
 		DocStruct volume = ff.getDigitalDocument().getLogicalDocStruct().getAllChildren().get(0);
 		DocStructType issueType = prefs.getDocStrctTypeByName("PeriodicalIssue");
@@ -316,6 +319,10 @@ public class BSZ_BodenseeImport_Helper {
 		
 		// run through all JSON elements to start the import now and add all issues and pages from one year to this volume
         List<BSZ_BodenseeImport_Element> elements = readElementsFromJson(inYear);
+        
+		// extract given pdf file
+		extractPdf(inYear,inProcessTitle, elements);
+        
 		for (BSZ_BodenseeImport_Element element : elements) {
 
 			String issueNumber = element.getIssueNumber();
