@@ -255,24 +255,17 @@ public class BSZ_BodenseeImport_Helper {
 		int physicalPageNumber = 1;
 
 		// add title to volume
-		Metadata mdVolTitle = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
-		mdVolTitle.setValue(title + inYear);
-		volume.addMetadata(mdVolTitle);
+		addMetadata(volume, "TitleDocMain", title + inYear);
 		// add current number
-		Metadata mdVolNum = new Metadata(prefs.getMetadataTypeByName("CurrentNo"));
-		mdVolNum.setValue(inYear);
-		volume.addMetadata(mdVolNum);
+		addMetadata(volume, "CurrentNo", inYear);	
 		// add current number sorting
 		addMetadata(volume, "CurrentNoSorting", inYear);		
 		// add viewer theme
 		addMetadata(volume, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
 		// add collections
 		addMetadata(volume, "singleDigCollection", "ZS_RegioBodensee");	
-		
 		// add publication year
-		Metadata mdVolYear = new Metadata(prefs.getMetadataTypeByName("PublicationYear"));
-		mdVolYear.setValue(inYear);
-		volume.addMetadata(mdVolYear);
+		addMetadata(volume, "PublicationYear", inYear);	
 		
 		// copy pdf files into right place in tmp folder
 		int pdfCounter = 1;
@@ -318,18 +311,12 @@ public class BSZ_BodenseeImport_Helper {
 					issue = ff.getDigitalDocument().createDocStruct(issueType);
 					
 					// add title to issue
-					Metadata mdIssueTitle = new Metadata(prefs.getMetadataTypeByName("TitleDocMain"));
-					mdIssueTitle.setValue("Heft " + issueNumber + " / " + inYear);
-					issue.addMetadata(mdIssueTitle);
+					addMetadata(issue, "TitleDocMain", "Heft " + issueNumber + " / " + inYear);	
 					// add publication year
-					Metadata mdYear = new Metadata(prefs.getMetadataTypeByName("PublicationYear"));
-					mdYear.setValue(inYear);
-					issue.addMetadata(mdYear);
+					addMetadata(issue, "PublicationYear", inYear);
 					// add publication date
-					Metadata mdDate = new Metadata(prefs.getMetadataTypeByName("DateOfPublication"));
-					mdDate.setValue(inYear + "-" + issueNumber + "-01");
-					issue.addMetadata(mdDate);
-					
+					addMetadata(issue, "DateOfPublication", inYear + "-" + issueNumber + "-01");
+					// add issue to volume
 					volume.addChild(issue);
 				}
 				
@@ -341,24 +328,13 @@ public class BSZ_BodenseeImport_Helper {
 				
 				// no matter if new or current issue, add now all pages to current issue
 				if (issue!=null){
-					
+
+					// assigning page numbers
 					DocStructType newPage = prefs.getDocStrctTypeByName("page");
 					DocStruct dsPage = ff.getDigitalDocument().createDocStruct(newPage);
-
-					// physical page number
 					physicaldocstruct.addChild(dsPage);
-					MetadataType mdt = prefs.getMetadataTypeByName("physPageNumber");
-					Metadata mdTemp = new Metadata(mdt);
-					mdTemp.setValue(String.valueOf(physicalPageNumber++));
-					dsPage.addMetadata(mdTemp);
-
-					// logical page number
-					mdt = prefs.getMetadataTypeByName("logicalPageNumber");
-					mdTemp = new Metadata(mdt);
-					mdTemp.setValue(element.getLabel());
-
-					// assign page to topscruct
-					dsPage.addMetadata(mdTemp);
+					addMetadata(dsPage, "physPageNumber", String.valueOf(physicalPageNumber++));
+					addMetadata(dsPage, "logicalPageNumber", element.getLabel());
 					volume.addReferenceTo(dsPage, "logical_physical");
 					issue.addReferenceTo(dsPage, "logical_physical");
 					
