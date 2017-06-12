@@ -28,7 +28,7 @@ public class ImportBodenseeZeitschriften_blgb implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "blgb";
 	private static final String ppn = "407528237";
 	private static final String title = "Bludenzer Geschichtsblätter";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
 	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
 	
