@@ -79,6 +79,12 @@ public class BSZ_BodenseeImport_Helper {
 		this.title = title;
 	}
 	
+	/**
+	 * Read all years from the given JSON file to pass back an ordered list of all 
+	 * importable years for the mass import plugin GUI
+	 * 
+	 * @return List<String> of years
+	 */
 	public List<String> getYearsFromJson() {
 		// read json file to list all years
 		LinkedHashSet<String> years = new LinkedHashSet<String>();
@@ -99,6 +105,16 @@ public class BSZ_BodenseeImport_Helper {
 		return mylist;
 	}
 	
+	/**
+	 * Generates {@link ImportObject} element for given {@link Record} and store it in the list of 
+	 * {@link ImportObject} to be imported then afterwards
+	 * This method is the main entry to to the catalogue import of bibliographic data, the generation
+	 * of a {@link Fileformat} and to enrich this with more bibliographic data, to read the logical 
+	 * structure from the JSON file and assign pages with page labes to these structural elements
+	 * 
+	 * @param answer List of {@link ImportObject} where to add the generated {@link ImportObject} to
+	 * @param record Record with information about the item to do the import for
+	 */
 	public void generateImportObject(List<ImportObject> answer, Record record) {
 		// generate an ImportObject for each selected year and add it to the result list later on
 		ImportObject importObjectYear = new ImportObject();
@@ -108,7 +124,7 @@ public class BSZ_BodenseeImport_Helper {
 		importObjectYear.setProcessTitle(basic_name + "_" + ppn_volume);
 		try {
 			// request the object from the catalogue and generate a FileFormat
-			Fileformat fileformat = convertData(ppn, ppn_volume);
+			Fileformat fileformat = createFileFormat();
 			if (fileformat != null) {
 				
 				// create physical docstruct
@@ -164,35 +180,15 @@ public class BSZ_BodenseeImport_Helper {
 		}
 	}
 	
-	private void adaptIdentifier(DocStruct ds, String field, String value) throws MetadataTypeNotAllowedException{
-		List<? extends Metadata> mdlist = ds.getAllMetadataByType(prefs.getMetadataTypeByName(field));
-		if (mdlist != null && mdlist.size()>0){
-			Metadata md = mdlist.get(0);
-			if (md!=null &&  !md.getValue().startsWith("bsz")){
-				md.setValue("bsz" +  md.getValue());			
-			}
-		}else {
-			Metadata md2 = new Metadata(prefs.getMetadataTypeByName(field));
-			md2.setValue("bsz" + value);
-			ds.addMetadata(md2);	
-		}
-	}
-	
-	private void addTheme(DocStruct ds) throws MetadataTypeNotAllowedException{
-		// add viewer theme
-		Metadata mdViewer = new Metadata(prefs.getMetadataTypeByName("ViewerSubTheme"));
-		mdViewer.setValue("bsz-st-bodenseebibliotheken");
-		ds.addMetadata(mdViewer);
-	}
-	
-	private void addCollection(DocStruct ds) throws MetadataTypeNotAllowedException{
-		// add collections
-		Metadata mdColl = new Metadata(prefs.getMetadataTypeByName("singleDigCollection"));
-		mdColl.setValue("ZS_RegioBodensee");
-		ds.addMetadata(mdColl);
-	}
-	
-	private Fileformat convertData(String ppn, String ppn_volume) throws ImportPluginException {
+	/**
+	 * Method to do the catalogue request for a given identifier and to generate a {@link Fileformat} out of it
+	 * During the creation of the {@link Fileformat} it is enriched with an updated identifier, a viewer
+	 * sub theme and the right digital collection assignements
+	 * 
+	 * @return {@link Fileformat} to use it as METS file afterwards
+	 * @throws ImportPluginException
+	 */
+	private Fileformat createFileFormat() throws ImportPluginException {
 		try {
 			ConfigOpacCatalogue coc = ConfigOpac.getInstance().getCatalogueByName(catalogue);
 			IOpacPlugin myImportOpac = (IOpacPlugin) PluginLoader.getPluginByTitle(PluginType.Opac, coc.getOpacType());
@@ -213,9 +209,10 @@ public class BSZ_BodenseeImport_Helper {
 			// change existing source ppn to have a prefix
 			adaptIdentifier(ds, "CatalogIDSource", ppn);
 			// add viewer theme
-			addTheme(ds);
+			addMetadata(ds, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
 			// add collections
-			addCollection(ds);
+			addMetadata(ds, "singleDigCollection", "ZS_RegioBodensee");	
+			
 			// assign a ppn digital to the child docstruct (volume)
 			if (ds.getType().isAnchor()) {
 				DocStruct child = ds.getAllChildren().get(0);
@@ -231,8 +228,16 @@ public class BSZ_BodenseeImport_Helper {
 	}
 	
 	/**
-	 * add all issues and pages to the volume
-	 * @param ff
+	 * Method to add all issues into the the generated {@link Fileformat} incl. page labels, structural sub elements
+	 * and page assignements. In case a pdf file exists for a the volume too it is extracted into individual pages
+	 * 
+	 * @param ff {@link Fileformat} to use for the enrichtment
+	 * @param inYear the year to use for the extraction of data from the JSON result
+	 * @param inProcessTitle the process title to use for copying the final results at the end
+	 * 
+	 * @throws IOException
+	 * @throws UGHException
+	 * @throws COSVisitorException
 	 */
 	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException, COSVisitorException{
 		File targetFolderImages = new File(tempFolder + ppn_volume + File.separator + "images" 
@@ -258,17 +263,12 @@ public class BSZ_BodenseeImport_Helper {
 		mdVolNum.setValue(inYear);
 		volume.addMetadata(mdVolNum);
 		// add current number sorting
-		Metadata mdVolNumSort = new Metadata(prefs.getMetadataTypeByName("CurrentNoSorting"));
-		mdVolNumSort.setValue(inYear);
-		volume.addMetadata(mdVolNumSort);
+		addMetadata(volume, "CurrentNoSorting", inYear);		
 		// add viewer theme
-		Metadata mdViewer = new Metadata(prefs.getMetadataTypeByName("ViewerSubTheme"));
-		mdViewer.setValue("bsz-st-bodenseebibliotheken");
-		volume.addMetadata(mdViewer);
+		addMetadata(volume, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
 		// add collections
-		Metadata mdColl = new Metadata(prefs.getMetadataTypeByName("singleDigCollection"));
-		mdColl.setValue("ZS_RegioBodensee");
-		volume.addMetadata(mdColl);
+		addMetadata(volume, "singleDigCollection", "ZS_RegioBodensee");	
+		
 		// add publication year
 		Metadata mdVolYear = new Metadata(prefs.getMetadataTypeByName("PublicationYear"));
 		mdVolYear.setValue(inYear);
@@ -376,5 +376,45 @@ public class BSZ_BodenseeImport_Helper {
 		}
 		reader.close();
 	}
-
+	
+	/**
+	 * Method to create or to adapt an identifier for a given structural element. The identifier that is 
+	 * named as parameter 'field' is searched in the structural element and gets the prefix 'bsz' added if 
+	 * it is not there already. In case the identifier is not existing add it now to the structural element
+	 * incl. the prefix 'bsz' 
+	 * 
+	 * @param ds the structural element to use
+	 * @param field the metadata field that is added or adapted
+	 * @param value the metadata value (the identifier) to use in case it is still missing
+	 * 
+	 * @throws MetadataTypeNotAllowedException
+	 */
+	private void adaptIdentifier(DocStruct ds, String field, String value) throws MetadataTypeNotAllowedException{
+		List<? extends Metadata> mdlist = ds.getAllMetadataByType(prefs.getMetadataTypeByName(field));
+		if (mdlist != null && mdlist.size()>0){
+			Metadata md = mdlist.get(0);
+			if (md!=null &&  !md.getValue().startsWith("bsz")){
+				md.setValue("bsz" +  md.getValue());			
+			}
+		}else {
+			Metadata md2 = new Metadata(prefs.getMetadataTypeByName(field));
+			md2.setValue("bsz" + value);
+			ds.addMetadata(md2);	
+		}
+	}
+	
+	/**
+	 * Method to add a specific metadata to a given structural element
+	 * 
+	 * @param ds structural element to use
+	 * @param field the metadata field to create
+	 * @param value the information the shall be stored as metadata in the given field
+	 * 
+	 * @throws MetadataTypeNotAllowedException
+	 */
+	private void addMetadata(DocStruct ds, String field, String value) throws MetadataTypeNotAllowedException{
+		Metadata mdColl = new Metadata(prefs.getMetadataTypeByName(field));
+		mdColl.setValue(value);
+		ds.addMetadata(mdColl);
+	}
 }
