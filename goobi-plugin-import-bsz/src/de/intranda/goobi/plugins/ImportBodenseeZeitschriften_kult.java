@@ -26,16 +26,14 @@ import ugh.dl.Prefs;
 public class ImportBodenseeZeitschriften_kult implements IImportPluginVersion2, IPlugin {
 	
 	private static final String BASIC_NAME = "kult";
-	private String ats = "kult";
 	private static final String ppn = "310869048";
 	private static final String title = "Zeitschrift für Kultur und Gesellschaft";
-	
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
 	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
 	
 	private MassImportForm form;
 	private Prefs prefs;
-	private String data = "";
 	private String importFolder = "";
 	
 	// after the import this command has to be called for the conversion of single page pdfs into alto files (out of Goobi)
@@ -49,6 +47,8 @@ public class ImportBodenseeZeitschriften_kult implements IImportPluginVersion2, 
 	@Override
 	public List<ImportObject> generateFiles(List<Record> records) {
 		bszHelper.prepare(prefs, ppn, importFolder, title);
+		bszHelper.setCreateIssues(createIssues);
+		
 		List<ImportObject> answer = new ArrayList<ImportObject>();
 		
 		// run through all selected records and start to prepare the import
@@ -114,7 +114,6 @@ public class ImportBodenseeZeitschriften_kult implements IImportPluginVersion2, 
 
 	@Override
 	public void setData(Record r) {
-		data = r.getData();
 	}
 
 	@Override
@@ -174,7 +173,7 @@ public class ImportBodenseeZeitschriften_kult implements IImportPluginVersion2, 
 
 	@Override
 	public String getProcessTitle() {
-		return ats;
+		return null;
 	}
 
 	@Override

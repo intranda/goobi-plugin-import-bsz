@@ -30,6 +30,7 @@ import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.exceptions.ImportPluginException;
 import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j;
 import ugh.dl.ContentFile;
 import ugh.dl.DigitalDocument;
@@ -37,7 +38,6 @@ import ugh.dl.DocStruct;
 import ugh.dl.DocStructType;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
-import ugh.dl.MetadataType;
 import ugh.dl.Prefs;
 import ugh.exceptions.MetadataTypeNotAllowedException;
 import ugh.exceptions.PreferencesException;
@@ -64,6 +64,7 @@ public class BSZ_BodenseeImport_Helper {
 	private String ppn;
 	private String tempFolder;
 	private String title;
+	@Setter private boolean createIssues = true;
 	
 	public BSZ_BodenseeImport_Helper(String inBasicName){
 		basic_name = inBasicName;
@@ -121,7 +122,11 @@ public class BSZ_BodenseeImport_Helper {
 		ppn_volume = ppn + "_" + record.getId();
 		String metsFileName = tempFolder + ppn_volume + ".xml";
 		importObjectYear.setMetsFilename(metsFileName);
-		importObjectYear.setProcessTitle(basic_name + "_" + ppn_volume);
+		String procTitle = basic_name + "_" + ppn_volume;
+		String regex = ConfigurationHelper.getInstance().getProcessTitleReplacementRegex();
+		procTitle = procTitle.replaceAll(regex, "");
+		importObjectYear.setProcessTitle(procTitle);
+		
 		try {
 			// request the object from the catalogue and generate a FileFormat
 			Fileformat fileformat = createFileFormat();
@@ -228,45 +233,18 @@ public class BSZ_BodenseeImport_Helper {
 	}
 	
 	/**
-	 * Method to add all issues into the the generated {@link Fileformat} incl. page labels, structural sub elements
-	 * and page assignements. In case a pdf file exists for a the volume too it is extracted into individual pages
+	 * Method to extract a given pdf file if it exists for the volume as individual pages
 	 * 
-	 * @param ff {@link Fileformat} to use for the enrichtment
 	 * @param inYear the year to use for the extraction of data from the JSON result
 	 * @param inProcessTitle the process title to use for copying the final results at the end
 	 * 
 	 * @throws IOException
-	 * @throws UGHException
 	 * @throws COSVisitorException
 	 */
-	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException, COSVisitorException{
-		File targetFolderImages = new File(tempFolder + ppn_volume + File.separator + "images" 
-        		+ File.separator + inProcessTitle + image_folder_extension);
+	private void extractPdf(String inYear, String inProcessTitle) throws IOException, COSVisitorException{
 		File targetFolderPdfSingles = new File(tempFolder + ppn_volume + File.separator + "ocr" 
 				+ File.separator + inProcessTitle + "_pdf");
-        targetFolderImages.mkdirs();
 		targetFolderPdfSingles.mkdirs();
-		
-		DocStruct physicaldocstruct = ff.getDigitalDocument().getPhysicalDocStruct();
-		DocStruct volume = ff.getDigitalDocument().getLogicalDocStruct().getAllChildren().get(0);
-		DocStructType issueType = prefs.getDocStrctTypeByName("PeriodicalIssue");
-		DocStruct issue = null;
-		String lastIssue = "";
-		int physicalPageNumber = 1;
-
-		// add title to volume
-		addMetadata(volume, "TitleDocMain", title + inYear);
-		// add current number
-		addMetadata(volume, "CurrentNo", inYear);	
-		// add current number sorting
-		addMetadata(volume, "CurrentNoSorting", inYear);		
-		// add viewer theme
-		addMetadata(volume, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
-		// add collections
-		addMetadata(volume, "singleDigCollection", "ZS_RegioBodensee");	
-		// add publication year
-		addMetadata(volume, "PublicationYear", inYear);	
-		
 		// copy pdf files into right place in tmp folder
 		int pdfCounter = 1;
 		
@@ -287,6 +265,47 @@ public class BSZ_BodenseeImport_Helper {
 				inputDocument.close();
 			}
 		}
+	}
+	
+	/**
+	 * Method to add all issues into the the generated {@link Fileformat} incl. page labels, structural sub elements
+	 * and page assignements. In case a pdf file exists for a the volume too it is extracted into individual pages
+	 * 
+	 * @param ff {@link Fileformat} to use for the enrichtment
+	 * @param inYear the year to use for the extraction of data from the JSON result
+	 * @param inProcessTitle the process title to use for copying the final results at the end
+	 * 
+	 * @throws IOException
+	 * @throws UGHException
+	 * @throws COSVisitorException
+	 */
+	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException, COSVisitorException {
+		File targetFolderImages = new File(tempFolder + ppn_volume + File.separator + "images" 
+        		+ File.separator + inProcessTitle + image_folder_extension);
+		targetFolderImages.mkdirs();
+		
+		// extract given pdf file
+		extractPdf(inYear,inProcessTitle);
+		
+		DocStruct physicaldocstruct = ff.getDigitalDocument().getPhysicalDocStruct();
+		DocStruct volume = ff.getDigitalDocument().getLogicalDocStruct().getAllChildren().get(0);
+		DocStructType issueType = prefs.getDocStrctTypeByName("PeriodicalIssue");
+		DocStruct issue = null;
+		String lastIssue = "";
+		int physicalPageNumber = 1;
+
+		// add title to volume
+		addMetadata(volume, "TitleDocMain", title + " " + inYear);
+		// add current number
+		addMetadata(volume, "CurrentNo", inYear);	
+		// add current number sorting
+		addMetadata(volume, "CurrentNoSorting", inYear);		
+		// add viewer theme
+		addMetadata(volume, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
+		// add collections
+		addMetadata(volume, "singleDigCollection", "ZS_RegioBodensee");	
+		// add publication year
+		addMetadata(volume, "PublicationYear", inYear);	
 		
 		DocStruct logicalDocstruct = ff.getDigitalDocument().getLogicalDocStruct();
         if (logicalDocstruct.getType().isAnchor()) {
@@ -295,64 +314,91 @@ public class BSZ_BodenseeImport_Helper {
             }
         }
 		
+		// run through all JSON elements to start the import now and add all issues and pages from one year to this volume
+        List<BSZ_BodenseeImport_Element> elements = readElementsFromJson(inYear);
+		for (BSZ_BodenseeImport_Element element : elements) {
+
+			String issueNumber = element.getIssueNumber();
+
+			// create new issue docstruct if necessary
+			if (!lastIssue.equals(element.getBookletid())){
+				lastIssue = element.getBookletid();
+				issue = ff.getDigitalDocument().createDocStruct(issueType);
+				
+				// add title to issue
+				addMetadata(issue, "TitleDocMain", "Heft " + issueNumber + " / " + inYear);	
+				// add publication year
+				addMetadata(issue, "PublicationYear", inYear);
+				// add publication date
+				addMetadata(issue, "DateOfPublication", inYear + "-" + issueNumber + "-01");
+				// add issue to volume
+				if (createIssues){
+					volume.addChild(issue);
+				}
+			}
+			
+			// copy each image into right place in tmp folder
+			File imageFile = new File(bsz_import_folder, element.getJpg().substring(image_file_prefix_to_remove.length() -1));
+			log.info("copy image from " + imageFile.getAbsolutePath() + " to " + targetFolderImages.getAbsolutePath());
+			FileUtils.copyFile(imageFile, new File(targetFolderImages, String.format("%08d", physicalPageNumber) + image_file_suffiix_to_use));
+			//FileUtils.copyFile(imageFile, new File(targetFolderImages, StringUtils.leftPad(issueNumber, 2, "0") + "_" + String.format("%08d", physicalPageNumber) + IMAGE_FILE_SUFFIX_TO_USE));
+			
+			// no matter if new or current issue, add now all pages to current issue
+			if (issue!=null){
+
+				// assigning page numbers
+				DocStructType newPage = prefs.getDocStrctTypeByName("page");
+				DocStruct dsPage = ff.getDigitalDocument().createDocStruct(newPage);
+				physicaldocstruct.addChild(dsPage);
+				addMetadata(dsPage, "physPageNumber", String.valueOf(physicalPageNumber++));
+				addMetadata(dsPage, "logicalPageNumber", element.getLabel());
+				volume.addReferenceTo(dsPage, "logical_physical");
+				if (createIssues){
+					issue.addReferenceTo(dsPage, "logical_physical");
+				}
+				
+				// image name
+				ContentFile cf = new ContentFile();
+				if (SystemUtils.IS_OS_WINDOWS) {
+					cf.setLocation("file:/" + inProcessTitle + image_folder_extension + imageFile.getName());
+				} else {
+					cf.setLocation("file://" + inProcessTitle + image_folder_extension + imageFile.getName());
+				}
+				dsPage.addContentFile(cf);
+				
+			}
+			
+		}
+	
+	}
+	
+	/**
+	 * Method to read all BSZ elements from the given JSON file
+	 * 
+	 * @param inYear The year to search for in the JSON file to just use elements from this year
+	 * @return ordered list of elements
+	 * 
+	 * @throws IOException
+	 */
+	private List<BSZ_BodenseeImport_Element> readElementsFromJson(String inYear) throws IOException{
+        // read all elements from the JSON file
+        List<BSZ_BodenseeImport_Element> elements = new ArrayList<BSZ_BodenseeImport_Element>();
 		JsonReader reader = new JsonReader(new FileReader(bsz_import_json_file));
 		Gson gson = new GsonBuilder().create();
 		reader.beginArray();
 		while (reader.hasNext()) {
 			BSZ_BodenseeImport_Element element = gson.fromJson(reader, BSZ_BodenseeImport_Element.class);
-			// add all issues and pages from one year to this volume
 			if (element.getJahr().equals(inYear)){
-				
-				String issueNumber = element.getBookletid().substring(element.getBookletid().lastIndexOf(".") + 1);
-
-				// create new issue docstruct if necessary
-				if (!lastIssue.equals(element.getBookletid())){
-					lastIssue = element.getBookletid();
-					issue = ff.getDigitalDocument().createDocStruct(issueType);
-					
-					// add title to issue
-					addMetadata(issue, "TitleDocMain", "Heft " + issueNumber + " / " + inYear);	
-					// add publication year
-					addMetadata(issue, "PublicationYear", inYear);
-					// add publication date
-					addMetadata(issue, "DateOfPublication", inYear + "-" + issueNumber + "-01");
-					// add issue to volume
-					volume.addChild(issue);
-				}
-				
-				// copy each image into right place in tmp folder
-				File imageFile = new File(bsz_import_folder, element.getJpg().substring(image_file_prefix_to_remove.length() -1));
-				log.info("copy image from " + imageFile.getAbsolutePath() + " to " + targetFolderImages.getAbsolutePath());
-				FileUtils.copyFile(imageFile, new File(targetFolderImages, String.format("%08d", physicalPageNumber) + image_file_suffiix_to_use));
-				//FileUtils.copyFile(imageFile, new File(targetFolderImages, StringUtils.leftPad(issueNumber, 2, "0") + "_" + String.format("%08d", physicalPageNumber) + IMAGE_FILE_SUFFIX_TO_USE));
-				
-				// no matter if new or current issue, add now all pages to current issue
-				if (issue!=null){
-
-					// assigning page numbers
-					DocStructType newPage = prefs.getDocStrctTypeByName("page");
-					DocStruct dsPage = ff.getDigitalDocument().createDocStruct(newPage);
-					physicaldocstruct.addChild(dsPage);
-					addMetadata(dsPage, "physPageNumber", String.valueOf(physicalPageNumber++));
-					addMetadata(dsPage, "logicalPageNumber", element.getLabel());
-					volume.addReferenceTo(dsPage, "logical_physical");
-					issue.addReferenceTo(dsPage, "logical_physical");
-					
-					// image name
-					ContentFile cf = new ContentFile();
-					if (SystemUtils.IS_OS_WINDOWS) {
-						cf.setLocation("file:/" + inProcessTitle + image_folder_extension + imageFile.getName());
-					} else {
-						cf.setLocation("file://" + inProcessTitle + image_folder_extension + imageFile.getName());
-					}
-					dsPage.addContentFile(cf);
-					
-				}
+				elements.add(element);
 			}
 		}
 		reader.close();
+		
+		// sort all elements in the list first by order number
+		Collections.sort(elements);
+		return elements;
 	}
-	
+
 	/**
 	 * Method to create or to adapt an identifier for a given structural element. The identifier that is 
 	 * named as parameter 'field' is searched in the structural element and gets the prefix 'bsz' added if 

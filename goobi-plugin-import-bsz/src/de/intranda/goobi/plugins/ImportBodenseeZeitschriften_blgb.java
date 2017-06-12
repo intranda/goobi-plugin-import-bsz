@@ -23,11 +23,11 @@ import ugh.dl.Prefs;
 
 @PluginImplementation
 @Log4j
-public class ImportBodenseeZeitschriften_aglv implements IImportPluginVersion2, IPlugin {
+public class ImportBodenseeZeitschriften_blgb implements IImportPluginVersion2, IPlugin {
 	
-	private static final String BASIC_NAME = "aglv";
-	private static final String ppn = "407654178";
-	private static final String title = "Vierteljahresschrift für Geschichte und Landeskunde Vorarlbergs";
+	private static final String BASIC_NAME = "blgb";
+	private static final String ppn = "407528237";
+	private static final String title = "Bludenzer Geschichtsblätter";
 	private static final boolean createIssues = false;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
 	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
