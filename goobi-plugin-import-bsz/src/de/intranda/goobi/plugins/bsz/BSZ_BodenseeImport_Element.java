@@ -16,7 +16,7 @@ public class BSZ_BodenseeImport_Element implements Comparable<BSZ_BodenseeImport
 	private String jpg;
 	
 	public int compareTo(BSZ_BodenseeImport_Element compareElement) {
-		return jpg.compareTo(compareElement.getJpg());
+		return jpg.toLowerCase().compareTo(compareElement.getJpg().toLowerCase());
 	}
 	
 	public String getIssueNumber(){
