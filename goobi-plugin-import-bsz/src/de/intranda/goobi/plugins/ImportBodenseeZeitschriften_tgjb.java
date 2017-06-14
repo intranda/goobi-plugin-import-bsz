@@ -23,9 +23,9 @@ import ugh.dl.Prefs;
 
 @PluginImplementation
 @Log4j
-public class ImportBodenseeZeitschriften_tgib implements IImportPluginVersion2, IPlugin {
+public class ImportBodenseeZeitschriften_tgjb implements IImportPluginVersion2, IPlugin {
 	
-	private static final String BASIC_NAME = "tgib";
+	private static final String BASIC_NAME = "tgjb";
 	private static final String ppn = "408411988";
 	private static final String title = "Thurgauer Jahrbuch";
 	private static final boolean createIssues = false;

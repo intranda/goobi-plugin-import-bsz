@@ -55,9 +55,7 @@ public class BSZ_BodenseeImport_Helper {
 	private String image_folder_extension = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
 	private String image_file_prefix_to_remove;
 	private String image_file_suffiix_to_use = ".jpg";
-	
-	//SQL converted to JSON simply using http://codebeautify.org/sql-to-json-converter
-//	private String bsz_import_json_file;
+
 	private String bsz_import_sql_file;
 	private String bsz_import_folder;
 	private String ppn_volume;
@@ -70,7 +68,6 @@ public class BSZ_BodenseeImport_Helper {
 	public BSZ_BodenseeImport_Helper(String inBasicName){
 		basic_name = inBasicName;
 		image_file_prefix_to_remove = "/data/kebweb/" + basic_name + "/";
-//		bsz_import_json_file = basic_folder + basic_name + ".json";
 		bsz_import_sql_file = basic_folder + basic_name + ".sql";
 		bsz_import_folder = basic_folder + basic_name + "/";
 	}
@@ -89,14 +86,13 @@ public class BSZ_BodenseeImport_Helper {
 	 * @return List<String> of years
 	 */
 	public List<String> getYearsFromJson() {
-		// read json file to list all years
+		// read sql file to list all years
 		LinkedHashSet<String> years = new LinkedHashSet<String>();
 		
 		try {
 			File f = new File (bsz_import_sql_file);
 			List<String> lines = FileUtils.readLines(f, "UTF-8");
 			for (String line : lines) {
-				System.out.println(line);
 				if (line.startsWith("INSERT INTO")){
 					BSZ_BodenseeImport_Element element = convertSqlToElement(line);
 					years.add(element.getJahr());
@@ -105,19 +101,6 @@ public class BSZ_BodenseeImport_Helper {
 		} catch (IOException e) {
 			log.error("Problem occured while reading the sql file for " + basic_name + " import", e);
 		}
-		
-//		try {
-//			JsonReader reader = new JsonReader(new FileReader(bsz_import_json_file));
-//			Gson gson = new GsonBuilder().create();
-//			reader.beginArray();
-//			while (reader.hasNext()) {
-//				BSZ_BodenseeImport_Element element = gson.fromJson(reader, BSZ_BodenseeImport_Element.class);
-//				years.add(element.getJahr());
-//			}
-//			reader.close();
-//		} catch (IOException e) {
-//			log.error("Problem occured while reading the json file for " + basic_name + " import", e);
-//		}
 		
 		ArrayList<String> mylist = new ArrayList<String>(years);
 		Collections.sort(mylist);
@@ -236,15 +219,6 @@ public class BSZ_BodenseeImport_Helper {
 			ConfigOpacCatalogue coc = ConfigOpac.getInstance().getCatalogueByName(catalogue);
 			IOpacPlugin myImportOpac = (IOpacPlugin) PluginLoader.getPluginByTitle(PluginType.Opac, coc.getOpacType());
 			Fileformat myRdf = myImportOpac.search("12", ppn, coc, prefs);
-//			if (myRdf != null) {
-//				try {
-//					ats = myImportOpac.createAtstsl(myRdf.getDigitalDocument().getLogicalDocStruct()
-//					        .getAllMetadataByType(prefs.getMetadataTypeByName("TitleDocMain")).get(0).getValue(), null)
-//					        .toLowerCase();
-//				} catch (Exception e) {
-//					ats = "";
-//				}
-//			}
 			
 			DocStruct ds = myRdf.getDigitalDocument().getLogicalDocStruct();
 			// change existing digital ppn to have a prefix
@@ -409,12 +383,9 @@ public class BSZ_BodenseeImport_Helper {
 				} else {
 					cf.setLocation("file://" + inProcessTitle + image_folder_extension + imageFile.getName());
 				}
-				dsPage.addContentFile(cf);
-				
+				dsPage.addContentFile(cf);	
 			}
-			
 		}
-	
 	}
 	
 	/**
@@ -442,20 +413,6 @@ public class BSZ_BodenseeImport_Helper {
 		} catch (IOException e) {
 			log.error("Problem occured while reading the sql file for " + basic_name + " import", e);
 		}
-		
-		
-		// read all elements from the JSON file
-//        List<BSZ_BodenseeImport_Element> elements = new ArrayList<BSZ_BodenseeImport_Element>();
-//		JsonReader reader = new JsonReader(new FileReader(bsz_import_json_file));
-//		Gson gson = new GsonBuilder().create();
-//		reader.beginArray();
-//		while (reader.hasNext()) {
-//			BSZ_BodenseeImport_Element element = gson.fromJson(reader, BSZ_BodenseeImport_Element.class);
-//			if (element.getJahr().equals(inYear)){
-//				elements.add(element);
-//			}
-//		}
-//		reader.close();
 		
 		// sort all elements in the list first by order number
 		Collections.sort(elements);
