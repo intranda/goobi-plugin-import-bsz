@@ -26,7 +26,7 @@ import ugh.dl.Prefs;
 public class ImportBodenseeZeitschriften_shbg implements IImportPluginVersion2, IPlugin {
 	
 	private static final String BASIC_NAME = "shbg";
-	private static final String ppn = "15663450";
+	private static final String ppn = "407949178";
 	private static final String title = "Schaffhauser Beiträge zur Geschichte";
 	private static final boolean createIssues = false;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
