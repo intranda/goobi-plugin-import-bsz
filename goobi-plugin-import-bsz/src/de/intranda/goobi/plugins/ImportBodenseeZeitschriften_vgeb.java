@@ -26,7 +26,7 @@ import ugh.dl.Prefs;
 public class ImportBodenseeZeitschriften_vgeb implements IImportPluginVersion2, IPlugin {
 	
 	private static final String BASIC_NAME = "vgeb";
-	private static final String ppn = "407599347";
+	private static final String ppn = "014854767";
 	private static final String title = "Schriften des Vereins für Geschichte des Bodensees u. seiner Umgebung";
 	private static final boolean createIssues = false;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
