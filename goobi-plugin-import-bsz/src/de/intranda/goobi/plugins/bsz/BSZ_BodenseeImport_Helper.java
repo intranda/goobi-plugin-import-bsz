@@ -95,7 +95,7 @@ public class BSZ_BodenseeImport_Helper {
 			for (String line : lines) {
 				if (line.startsWith("INSERT INTO")){
 					BSZ_BodenseeImport_Element element = convertSqlToElement(line);
-					years.add(element.getJahr());
+					years.add(element.getJahr() + "_" + element.getIssueNumber());
 				}
 			}
 		} catch (IOException e) {
@@ -290,14 +290,14 @@ public class BSZ_BodenseeImport_Helper {
 	 * and page assignements. In case a pdf file exists for a the volume too it is extracted into individual pages
 	 * 
 	 * @param ff {@link Fileformat} to use for the enrichtment
-	 * @param inYear the year to use for the extraction of data from the JSON result
+	 * @param inYearAndIssueNumber the year to use for the extraction of data from the JSON result
 	 * @param inProcessTitle the process title to use for copying the final results at the end
 	 * 
 	 * @throws IOException
 	 * @throws UGHException
 	 * @throws COSVisitorException
 	 */
-	private void addAllIssues(Fileformat ff, String inYear, String inProcessTitle) throws IOException, UGHException, COSVisitorException {
+	private void addAllIssues(Fileformat ff, String inYearAndIssueNumber, String inProcessTitle) throws IOException, UGHException, COSVisitorException {
 		File targetFolderImages = new File(tempFolder + ppn_volume + File.separator + "images" 
         		+ File.separator + inProcessTitle + image_folder_extension);
 		targetFolderImages.mkdirs();
@@ -309,18 +309,28 @@ public class BSZ_BodenseeImport_Helper {
 		String lastIssue = "";
 		int physicalPageNumber = 1;
 
-		// add title to volume
-		addMetadata(volume, "TitleDocMain", title + " " + inYear);
-		// add current number
-		addMetadata(volume, "CurrentNo", inYear);	
-		// add current number sorting
-		addMetadata(volume, "CurrentNoSorting", inYear);		
-		// add viewer theme
-		addMetadata(volume, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
-		// add collections
-		addMetadata(volume, "singleDigCollection", "ZS_RegioBodensee");	
-		// add publication year
-		addMetadata(volume, "PublicationYear", inYear);	
+		
+		if (createIssues){
+			ff.getDigitalDocument().getLogicalDocStruct().getAllChildren().remove(volume);
+		}else{
+			String justYear = inYearAndIssueNumber;
+			if (justYear.contains("_")){
+				justYear=justYear.substring(0,justYear.indexOf("_"));
+			}
+			// add title to volume
+			addMetadata(volume, "TitleDocMain", title + " " + justYear);
+			// add current number
+			addMetadata(volume, "CurrentNo", justYear);	
+			// add current number sorting
+			addMetadata(volume, "CurrentNoSorting", justYear);		
+			// add viewer theme
+			addMetadata(volume, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
+			// add collections
+			addMetadata(volume, "singleDigCollection", "ZS_RegioBodensee");	
+			// add publication year
+			addMetadata(volume, "PublicationYear", justYear);				
+		}
+		
 		
 		DocStruct logicalDocstruct = ff.getDigitalDocument().getLogicalDocStruct();
         if (logicalDocstruct.getType().isAnchor()) {
@@ -330,29 +340,34 @@ public class BSZ_BodenseeImport_Helper {
         }
 		
 		// run through all JSON elements to start the import now and add all issues and pages from one year to this volume
-        List<BSZ_BodenseeImport_Element> elements = readElementsFromJson(inYear);
+        List<BSZ_BodenseeImport_Element> elements = readElementsFromSql(inYearAndIssueNumber);
         
 		// extract given pdf file
-		extractPdf(inYear,inProcessTitle, elements);
+		extractPdf(inYearAndIssueNumber,inProcessTitle, elements);
         
 		for (BSZ_BodenseeImport_Element element : elements) {
 
 			String issueNumber = element.getIssueNumber();
-
+			String year = element.getJahr();
+			
 			// create new issue docstruct if necessary
 			if (!lastIssue.equals(element.getBookletid())){
 				lastIssue = element.getBookletid();
 				issue = ff.getDigitalDocument().createDocStruct(issueType);
 				
 				// add title to issue
-				addMetadata(issue, "TitleDocMain", "Heft " + issueNumber + " / " + inYear);	
+				addMetadata(issue, "TitleDocMain", "Heft " + issueNumber + " / " + year);	
 				// add publication year
-				addMetadata(issue, "PublicationYear", inYear);
+				addMetadata(issue, "PublicationYear", year);
 				// add publication date
-				addMetadata(issue, "DateOfPublication", inYear + "-" + issueNumber + "-01");
+				addMetadata(issue, "DateOfPublication", year + "-" + issueNumber + "-01");
+				// add digital collection
+				addMetadata(issue, "singleDigCollection", "ZS_RegioBodensee");	
 				// add issue to volume
+				volume.addChild(issue);
 				if (createIssues){
-					volume.addChild(issue);
+					adaptIdentifier(issue, "CatalogIDDigital", ppn_volume);
+					ff.getDigitalDocument().getLogicalDocStruct().addChild(issue);
 				}
 			}
 			
@@ -396,7 +411,7 @@ public class BSZ_BodenseeImport_Helper {
 	 * 
 	 * @throws IOException
 	 */
-	private List<BSZ_BodenseeImport_Element> readElementsFromJson(String inYear) throws IOException{
+	private List<BSZ_BodenseeImport_Element> readElementsFromSql(String inYearAndIssue) throws IOException{
 		List<BSZ_BodenseeImport_Element> elements = new ArrayList<BSZ_BodenseeImport_Element>();
 		// read all elements from the sql file
 		try {
@@ -405,7 +420,7 @@ public class BSZ_BodenseeImport_Helper {
 			for (String line : lines) {
 				if (line.startsWith("INSERT INTO")){
 					BSZ_BodenseeImport_Element element = convertSqlToElement(line);
-					if (element.getJahr().equals(inYear)){
+					if ((element.getJahr() + "_" + element.getIssueNumber()).equals(inYearAndIssue)){
 						elements.add(element);
 					}
 				}
