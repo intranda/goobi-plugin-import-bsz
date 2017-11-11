@@ -28,7 +28,7 @@ public class ImportBodenseeZeitschriften_aglv implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "aglv";
 	private static final String ppn = "407654178";
 	private static final String title = "Vierteljahresschrift für Geschichte und Landeskunde Vorarlbergs";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
 	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
 	
