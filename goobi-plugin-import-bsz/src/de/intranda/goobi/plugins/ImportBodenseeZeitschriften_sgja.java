@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_sgja implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "sgja";
 	private static final String ppn = "407936130";
 	private static final String title = "St.Galler Jahr";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

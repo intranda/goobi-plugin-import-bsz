@@ -30,7 +30,7 @@ public class ImportBodenseeZeitschriften_dosc implements IImportPluginVersion2, 
 	private static final String title = "Dornbirner Schriften – Beiträge zur Stadtkunde";
 	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, true);
 	
 	private MassImportForm form;
 	private Prefs prefs;
@@ -67,6 +67,7 @@ public class ImportBodenseeZeitschriften_dosc implements IImportPluginVersion2, 
 	
 	@Override
 	public List<Record> generateRecordsFromFilenames(List<String> filenames) {
+		bszHelper.setCreateIssues(createIssues);
 		List<Record> records = new ArrayList<Record>();
 		for (String filename : filenames) {
 			Record rec = new Record();

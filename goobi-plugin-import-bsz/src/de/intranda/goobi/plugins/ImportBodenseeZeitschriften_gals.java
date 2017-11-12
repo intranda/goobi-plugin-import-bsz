@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_gals implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "gals";
 	private static final String ppn = "408013087";
 	private static final String title = "Gallus-Stadt: Jahrbuch der Stadt St. Gallen";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

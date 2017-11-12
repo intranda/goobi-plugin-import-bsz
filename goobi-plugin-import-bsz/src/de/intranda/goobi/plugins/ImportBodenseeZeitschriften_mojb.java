@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_mojb implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "mojb";
 	private static final String ppn = "408063963";
 	private static final String title = "Jahresbericht Montafoner Museen";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

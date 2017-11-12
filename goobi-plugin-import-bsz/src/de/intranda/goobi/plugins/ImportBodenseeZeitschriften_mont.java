@@ -30,7 +30,7 @@ public class ImportBodenseeZeitschriften_mont implements IImportPluginVersion2, 
 	private static final String title = "Montfort : Zeitschrift f. Geschichte u. Gegenwart Vorarlbergs";
 	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, true);
 	
 	private MassImportForm form;
 	private Prefs prefs;

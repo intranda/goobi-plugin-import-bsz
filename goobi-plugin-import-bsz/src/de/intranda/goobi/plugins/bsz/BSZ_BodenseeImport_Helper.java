@@ -1,7 +1,6 @@
 package de.intranda.goobi.plugins.bsz;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -10,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -20,10 +20,6 @@ import org.goobi.production.importer.ImportObject;
 import org.goobi.production.importer.Record;
 import org.goobi.production.plugin.PluginLoader;
 import org.goobi.production.plugin.interfaces.IOpacPlugin;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
 
 import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.NIOFileUtils;
@@ -63,13 +59,16 @@ public class BSZ_BodenseeImport_Helper {
 	private String ppn;
 	private String tempFolder;
 	private String title;
-	@Setter private boolean createIssues = true;
+	@Setter 
+	private boolean createIssues = true;
+	private boolean separateBookletIds = false;
 	
-	public BSZ_BodenseeImport_Helper(String inBasicName){
+	public BSZ_BodenseeImport_Helper(String inBasicName, boolean inSeparateBooketIds){
 		basic_name = inBasicName;
 		image_file_prefix_to_remove = "/data/kebweb/" + basic_name + "/";
 		bsz_import_sql_file = basic_folder + basic_name + ".sql";
 		bsz_import_folder = basic_folder + basic_name + "/";
+		separateBookletIds = inSeparateBooketIds;
 	}
 	
 	public void prepare(Prefs prefs, String ppn, String tempFolder, String title) {
@@ -95,7 +94,16 @@ public class BSZ_BodenseeImport_Helper {
 			for (String line : lines) {
 				if (line.startsWith("INSERT INTO")){
 					BSZ_BodenseeImport_Element element = convertSqlToElement(line);
-					years.add(element.getJahr() + "_" + element.getIssueNumber());
+					
+					String isn = "";
+					if (StringUtils.isNumeric(element.getIssueNumber())){
+						isn = "_" + element.getIssueNumber();
+					}
+					if (separateBookletIds){
+						years.add(element.getJahr() + isn + "_" + element.getBookletid());
+					} else{
+						years.add(element.getJahr() + isn);
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -347,7 +355,13 @@ public class BSZ_BodenseeImport_Helper {
         
 		for (BSZ_BodenseeImport_Element element : elements) {
 
-			String issueNumber = element.getIssueNumber();
+			String issueForTitle = "";
+			String issueForDate = "01";
+			if (StringUtils.isNumeric(element.getIssueNumber())){
+				issueForTitle = "-" + element.getIssueNumber();
+				issueForDate = element.getIssueNumber();
+			}
+					
 			String year = element.getJahr();
 			
 			// create new issue docstruct if necessary
@@ -356,11 +370,11 @@ public class BSZ_BodenseeImport_Helper {
 				issue = ff.getDigitalDocument().createDocStruct(issueType);
 				
 				// add title to issue
-				addMetadata(issue, "TitleDocMain", "Heft " + issueNumber + " / " + year);	
+				addMetadata(issue, "TitleDocMain", title + " " + year + issueForTitle);	
 				// add publication year
 				addMetadata(issue, "PublicationYear", year);
 				// add publication date
-				addMetadata(issue, "DateOfPublication", year + "-" + issueNumber + "-01");
+				addMetadata(issue, "DateOfPublication", year + "-" + issueForDate + "-01");
 				// add digital collection
 				addMetadata(issue, "singleDigCollection", "ZS_RegioBodensee");	
 				// add issue to volume
@@ -420,7 +434,17 @@ public class BSZ_BodenseeImport_Helper {
 			for (String line : lines) {
 				if (line.startsWith("INSERT INTO")){
 					BSZ_BodenseeImport_Element element = convertSqlToElement(line);
-					if ((element.getJahr() + "_" + element.getIssueNumber()).equals(inYearAndIssue)){
+					
+					String isn = "";
+					if (StringUtils.isNumeric(element.getIssueNumber())){
+						isn = "_" + element.getIssueNumber();
+					}
+					
+					String comparer = element.getJahr() + isn;
+					if (separateBookletIds){
+						comparer += "_" + element.getBookletid();
+					}
+					if (comparer.equals(inYearAndIssue)){
 						elements.add(element);
 					}
 				}

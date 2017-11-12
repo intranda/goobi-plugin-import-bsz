@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_kumm implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "kumm";
 	private static final String ppn = "407645934";
 	private static final String title = "Kummenberg. Schriftenreihe der Rheticus-Gesellschaft";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

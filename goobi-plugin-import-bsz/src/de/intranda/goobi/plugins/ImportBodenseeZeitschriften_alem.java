@@ -30,7 +30,7 @@ public class ImportBodenseeZeitschriften_alem implements IImportPluginVersion2, 
 	private static final String title = "Alemania / Zeitschrift für alle Gebiete des Wissens und der Kunst mit der Berücksichtigung der Heimatkunde";
 	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

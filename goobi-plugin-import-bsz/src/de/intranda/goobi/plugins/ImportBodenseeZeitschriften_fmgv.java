@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_fmgv implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "fmgv";
 	private static final String ppn = "40801069X";
 	private static final String title = "Forschungen und Mitteilungen zur Geschichte Tirols und Vorarlbergs";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

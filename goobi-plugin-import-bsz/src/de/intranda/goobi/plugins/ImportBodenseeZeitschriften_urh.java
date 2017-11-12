@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_urh implements IImportPluginVersion2, I
 	private static final String BASIC_NAME = "urh";
 	private static final String ppn = "407599347";
 	private static final String title = "Unser Rheintal";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

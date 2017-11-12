@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_vgeb implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "vgeb";
 	private static final String ppn = "014854767";
 	private static final String title = "Schriften des Vereins für Geschichte des Bodensees u. seiner Umgebung";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

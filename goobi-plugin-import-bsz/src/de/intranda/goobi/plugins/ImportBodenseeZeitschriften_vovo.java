@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_vovo implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "vovo";
 	private static final String ppn = "407618872";
 	private static final String title = "Vorarlberger Volkskalender";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;

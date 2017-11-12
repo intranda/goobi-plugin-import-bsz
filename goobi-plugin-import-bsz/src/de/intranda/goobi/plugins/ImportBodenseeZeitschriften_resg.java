@@ -28,9 +28,9 @@ public class ImportBodenseeZeitschriften_resg implements IImportPluginVersion2, 
 	private static final String BASIC_NAME = "resg";
 	private static final String ppn = "407687076";
 	private static final String title = "Region St.Gallen: Das St.Galler Jahrbuch";
-	private static final boolean createIssues = false;
+	private static final boolean createIssues = true;
 	private static final String PLUGIN_NAME = "ImportBodenseeZeitschriften_" + BASIC_NAME;
-	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME);
+	private BSZ_BodenseeImport_Helper bszHelper = new BSZ_BodenseeImport_Helper(BASIC_NAME, false);
 	
 	private MassImportForm form;
 	private Prefs prefs;
