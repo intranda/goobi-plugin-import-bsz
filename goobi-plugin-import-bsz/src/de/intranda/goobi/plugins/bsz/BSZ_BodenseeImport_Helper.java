@@ -2,6 +2,7 @@ package de.intranda.goobi.plugins.bsz;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -268,16 +269,18 @@ public class BSZ_BodenseeImport_Helper {
 		// copy pdf files into right place in tmp folder
 		int pdfCounter = 1;
 		
-		List<Path> allMyFiles = NIOFileUtils.listFiles(bsz_import_folder);
+		List<Path> allMyFiles = new ArrayList();
+//		allMyFiles = NIOFileUtils.listFiles(bsz_import_folder,PDF_FILTER);
 		if (elements.size()>0){
 			String firstImage = elements.get(0).getJpg().substring(image_file_prefix_to_remove.length() -1);
 			firstImage = firstImage.substring(0, firstImage.lastIndexOf("/"));
 			File folderPath = new File(bsz_import_folder, firstImage);
-			allMyFiles.addAll(NIOFileUtils.listFiles(folderPath.getAbsolutePath()));
+			allMyFiles.addAll(NIOFileUtils.listFiles(folderPath.getAbsolutePath(),PDF_FILTER));
 		}
 		for (Path entry : allMyFiles) {
+			log.debug(entry.toAbsolutePath());
 			File f = entry.toFile();
-			if (f.getName().endsWith(".pdf") && f.getName().toLowerCase().contains("j" + inYear + "")) {
+//			if (f.getName().endsWith(".pdf") && f.getName().toLowerCase().contains("j" + inYear + "")) {
 				// create single page pdf files
 				PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
 				for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
@@ -290,8 +293,21 @@ public class BSZ_BodenseeImport_Helper {
 				}
 				inputDocument.close();
 			}
-		}
+//		}
 	}
+	
+	public static final DirectoryStream.Filter<Path> PDF_FILTER = new DirectoryStream.Filter<Path>() {
+        @Override
+        public boolean accept(Path path) {
+            boolean fileOk = false;
+            String name = path.getFileName().toString();
+            if (name.toLowerCase().endsWith(".pdf")){
+                fileOk = true;
+            }
+            return fileOk;
+        }
+    };
+	
 	
 	/**
 	 * Method to add all issues into the the generated {@link Fileformat} incl. page labels, structural sub elements
