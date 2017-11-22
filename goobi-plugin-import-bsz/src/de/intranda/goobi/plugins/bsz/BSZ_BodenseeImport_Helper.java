@@ -281,6 +281,32 @@ public class BSZ_BodenseeImport_Helper {
 			log.debug(entry.toAbsolutePath());
 			File f = entry.toFile();
 //			if (f.getName().endsWith(".pdf") && f.getName().toLowerCase().contains("j" + inYear + "")) {
+			
+			// aglv, alem, alst, bgvh, blbg, dosc, fmgv, heim, jffv, jvlm, klwa, kumm, mojb, mosr, rhet, tivo, vona, vool, vora, vovo, wahb, wahe jall, vgeb.
+			if (f.getName().contains("/aglv/") || 
+					f.getName().contains("/alem/") || 
+					f.getName().contains("/alst/") || 
+					f.getName().contains("/bgvh/") || 
+					f.getName().contains("/blbg/") || 
+					f.getName().contains("/dosc/") || 
+					f.getName().contains("/fmgv/") || 
+					f.getName().contains("/heim/") || 
+					f.getName().contains("/jffv/") || 
+					f.getName().contains("/jvlm/") || 
+					f.getName().contains("/klwa/") || 
+					f.getName().contains("/kumm/") || 
+					f.getName().contains("/mojb/") || 
+					f.getName().contains("/mosr/") || 
+					f.getName().contains("/rhet/") || 
+					f.getName().contains("/tivo/") || 
+					f.getName().contains("/vona/") || 
+					f.getName().contains("/vool/") || 
+					f.getName().contains("/vora/") || 
+					f.getName().contains("/vovo/") || 
+					f.getName().contains("/wahb/") || 
+					f.getName().contains("/wahe/") || 
+					f.getName().contains("/jall/") || 
+					f.getName().contains("/vgeb/")) {
 				// create single page pdf files
 				PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
 				for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
@@ -293,7 +319,7 @@ public class BSZ_BodenseeImport_Helper {
 				}
 				inputDocument.close();
 			}
-//		}
+		}
 	}
 	
 	public static final DirectoryStream.Filter<Path> PDF_FILTER = new DirectoryStream.Filter<Path>() {
