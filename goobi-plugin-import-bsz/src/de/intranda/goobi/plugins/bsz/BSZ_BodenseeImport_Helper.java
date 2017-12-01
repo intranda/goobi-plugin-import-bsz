@@ -150,6 +150,8 @@ public class BSZ_BodenseeImport_Helper {
 		// generate an ImportObject for each selected year and add it to the result list later on
 		ImportObject importObjectYear = new ImportObject();
 		ppn_volume = ppn + "_" + record.getId();
+		ppn_volume = ppn_volume.replaceAll("\\+", "_");
+		ppn_volume = ppn_volume.replaceAll("\\.", "_");
 		String metsFileName = tempFolder + ppn_volume + ".xml";
 		importObjectYear.setMetsFilename(metsFileName);
 		String procTitle = basic_name + "_" + ppn_volume;
@@ -283,30 +285,33 @@ public class BSZ_BodenseeImport_Helper {
 //			if (f.getName().endsWith(".pdf") && f.getName().toLowerCase().contains("j" + inYear + "")) {
 			
 			// aglv, alem, alst, bgvh, blbg, dosc, fmgv, heim, jffv, jvlm, klwa, kumm, mojb, mosr, rhet, tivo, vona, vool, vora, vovo, wahb, wahe jall, vgeb.
-			if (f.getName().contains("/aglv/") || 
-					f.getName().contains("/alem/") || 
-					f.getName().contains("/alst/") || 
-					f.getName().contains("/bgvh/") || 
-					f.getName().contains("/blbg/") || 
-					f.getName().contains("/dosc/") || 
-					f.getName().contains("/fmgv/") || 
-					f.getName().contains("/heim/") || 
-					f.getName().contains("/jffv/") || 
-					f.getName().contains("/jvlm/") || 
-					f.getName().contains("/klwa/") || 
-					f.getName().contains("/kumm/") || 
-					f.getName().contains("/mojb/") || 
-					f.getName().contains("/mosr/") || 
-					f.getName().contains("/rhet/") || 
-					f.getName().contains("/tivo/") || 
-					f.getName().contains("/vona/") || 
-					f.getName().contains("/vool/") || 
-					f.getName().contains("/vora/") || 
-					f.getName().contains("/vovo/") || 
-					f.getName().contains("/wahb/") || 
-					f.getName().contains("/wahe/") || 
-					f.getName().contains("/jall/") || 
-					f.getName().contains("/vgeb/")) {
+			if (f.getAbsolutePath().contains("/aglv/") || 
+					f.getAbsolutePath().contains("/alem/") || 
+					f.getAbsolutePath().contains("/alst/") || 
+					f.getAbsolutePath().contains("/bgvh/") || 
+					f.getAbsolutePath().contains("/bgwh/") || 
+					f.getAbsolutePath().contains("/blgb/") || 
+					f.getAbsolutePath().contains("/dosc/") || 
+					f.getAbsolutePath().contains("/fmgv/") || 
+					f.getAbsolutePath().contains("/heim/") || 
+					f.getAbsolutePath().contains("/jffv/") || 
+					f.getAbsolutePath().contains("/jvlm/") || 
+					f.getAbsolutePath().contains("/klwa/") || 
+					f.getAbsolutePath().contains("/kult/") || 
+					f.getAbsolutePath().contains("/kumm/") || 
+					f.getAbsolutePath().contains("/mojb/") || 
+					f.getAbsolutePath().contains("/mosr/") || 
+					f.getAbsolutePath().contains("/rhet/") || 
+					f.getAbsolutePath().contains("/tivo/") || 
+					f.getAbsolutePath().contains("/vona/") || 
+					f.getAbsolutePath().contains("/vool/") || 
+					f.getAbsolutePath().contains("/vora/") || 
+					f.getAbsolutePath().contains("/vovo/") || 
+					f.getAbsolutePath().contains("/wahb/") || 
+					f.getAbsolutePath().contains("/wahe/") || 
+					f.getAbsolutePath().contains("/sgja/") || 
+					f.getAbsolutePath().contains("/jall/") || 
+					f.getAbsolutePath().contains("/vgeb/")) {
 				// create single page pdf files
 				PDDocument inputDocument = PDDocument.loadNonSeq(f, null);
 				for (int page = 1; page <= inputDocument.getNumberOfPages(); ++page) {
@@ -419,6 +424,8 @@ public class BSZ_BodenseeImport_Helper {
 				addMetadata(issue, "DateOfPublication", year + "-" + issueForDate + "-01");
 				// add digital collection
 				addMetadata(issue, "singleDigCollection", "ZS_RegioBodensee");	
+				// add viewer sub theme
+				addMetadata(issue, "ViewerSubTheme", "bsz-st-bodenseebibliotheken");	
 				// add issue to volume
 				volume.addChild(issue);
 				if (createIssues){
@@ -429,7 +436,7 @@ public class BSZ_BodenseeImport_Helper {
 			
 			// copy each image into right place in tmp folder
 			File imageFile = new File(bsz_import_folder, element.getJpg().substring(image_file_prefix_to_remove.length() -1));
-			log.info("copy image from " + imageFile.getAbsolutePath() + " to " + targetFolderImages.getAbsolutePath());
+			log.debug("copy image from " + imageFile.getAbsolutePath() + " to " + targetFolderImages.getAbsolutePath());
 			FileUtils.copyFile(imageFile, new File(targetFolderImages, String.format("%08d", physicalPageNumber) + image_file_suffiix_to_use));
 			//FileUtils.copyFile(imageFile, new File(targetFolderImages, StringUtils.leftPad(issueNumber, 2, "0") + "_" + String.format("%08d", physicalPageNumber) + IMAGE_FILE_SUFFIX_TO_USE));
 			

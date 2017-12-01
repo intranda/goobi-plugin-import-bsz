@@ -17,7 +17,7 @@
 	<property name="pluginFolderUnix" value="/opt/digiverso/goobi/plugins/import/" />
 	
 	<path id="classpath">
-	    <fileset dir="/opt/digiverso/goobilibs/lib"/>
+	<!--    <fileset dir="/opt/digiverso/goobilibs/lib"/> -->
 		<fileset dir="/opt/digiverso/libs" />
 	</path>
 
