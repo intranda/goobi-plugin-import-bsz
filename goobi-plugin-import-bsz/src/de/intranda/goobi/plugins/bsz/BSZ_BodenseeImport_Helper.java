@@ -24,6 +24,7 @@ import org.goobi.production.plugin.interfaces.IOpacPlugin;
 
 import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.NIOFileUtils;
+import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.exceptions.ImportPluginException;
 import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
@@ -277,7 +278,7 @@ public class BSZ_BodenseeImport_Helper {
 			String firstImage = elements.get(0).getJpg().substring(image_file_prefix_to_remove.length() -1);
 			firstImage = firstImage.substring(0, firstImage.lastIndexOf("/"));
 			File folderPath = new File(bsz_import_folder, firstImage);
-			allMyFiles.addAll(NIOFileUtils.listFiles(folderPath.getAbsolutePath(),PDF_FILTER));
+			allMyFiles.addAll(StorageProvider.getInstance().listFiles(folderPath.getAbsolutePath(),PDF_FILTER));
 		}
 		for (Path entry : allMyFiles) {
 			log.debug(entry.toAbsolutePath());
@@ -309,7 +310,7 @@ public class BSZ_BodenseeImport_Helper {
 					f.getAbsolutePath().contains("/vovo/") || 
 					f.getAbsolutePath().contains("/wahb/") || 
 					f.getAbsolutePath().contains("/wahe/") || 
-					f.getAbsolutePath().contains("/sgja/") || 
+//					f.getAbsolutePath().contains("/sgja/") || 
 					f.getAbsolutePath().contains("/jall/") || 
 					f.getAbsolutePath().contains("/vgeb/")) {
 				// create single page pdf files
