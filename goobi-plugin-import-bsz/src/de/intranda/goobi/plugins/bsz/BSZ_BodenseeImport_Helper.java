@@ -48,7 +48,7 @@ public class BSZ_BodenseeImport_Helper {
     private String catalogue = "BSZ-BW";
     private String basic_folder = "/opt/digiverso/BSZ/Bodensee/";
 
-    private String image_folder_extension = "_" + ConfigurationHelper.getInstance().getMediaDirectorySuffix();
+    private String image_folder_extension = "_" + "tif";
     private String image_file_prefix_to_remove;
     private String image_file_suffiix_to_use = ".jpg";
 
