@@ -6,7 +6,7 @@
   <properties>
     <jar.name>plugin_intranda_import_bsz</jar.name>
     <dest.folder>/opt/digiverso/goobi/plugins/import/</dest.folder>
-    <goobi.version>22.09.1</goobi.version>
+    <goobi.version>22.09.2</goobi.version>
   </properties>
   <distributionManagement>
     <repository>
