@@ -2,11 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.intranda.goobi.plugins.import</groupId>
   <artifactId>bsz</artifactId>
-  <version>23.05</version>
+  <version>23.05.1</version>
   <properties>
     <jar.name>plugin_intranda_import_bsz</jar.name>
     <dest.folder>/opt/digiverso/goobi/plugins/import/</dest.folder>
-    <goobi.version>23.05</goobi.version>
+    <goobi.version>23.05.1</goobi.version>
   </properties>
   <distributionManagement>
     <repository>
